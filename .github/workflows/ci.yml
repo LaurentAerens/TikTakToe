@@ -1,0 +1,54 @@
+name: CI - Build & Test
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "src/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "src/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    uses: ./.github/workflows/build-test-template.yml
+    with:
+      project_name: MyProject
+      project_path: src/MyProject.slnx
+      run_tests: true
+
+  quality-gates:
+    name: Quality Gates Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: always()
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check Quality Gates
+        run: |
+          echo "## Build & Tests Status"
+          echo "Build and tests: ${{ needs.build-and-test.result }}"
+
+          if [[ "${{ needs.build-and-test.result }}" == "failure" ]]; then
+            echo "❌ Build or tests failed"
+            exit 1
+          fi
+
+          echo "✅ All quality gates passed!"

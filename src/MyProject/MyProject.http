@@ -1,0 +1,11 @@
+@MyProject_HostAddress = http://localhost:8080
+
+GET {{MyProject_HostAddress}}/healthz
+Accept: application/json
+
+###
+
+GET {{MyProject_HostAddress}}/version
+Accept: application/json
+
+###

@@ -1,0 +1,16 @@
+name: CodeQL Config
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  # Exclude auto-generated code
+  - '**/Generated/**'
+
+  # Exclude test projects (not deployed to production)
+  - '**/*.Tests/**'
+  - '**/TestResults/**'
+
+  # Exclude build artifacts
+  - '**/bin/**'
+  - '**/obj/**'
