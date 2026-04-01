@@ -47,10 +47,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore src/MyProject.slnx
+        run: dotnet restore src/backend/TikTakToe.slnx
 
       - name: Build for CodeQL
-        run: dotnet build --no-restore src/MyProject.slnx -c Release
+        run: dotnet build --no-restore src/backend/TikTakToe.slnx -c Release
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
@@ -107,11 +107,11 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore src/MyProject.slnx
+        run: dotnet restore src/backend/TikTakToe.slnx
 
       - name: Build with StyleCop Analysis
         run: |
-          dotnet build src/MyProject.slnx \
+          dotnet build src/backend/TikTakToe.slnx \
             -c Release \
             -p:EnforceCodeStyleInBuild=true \
             -p:TreatWarningsAsErrors=true \

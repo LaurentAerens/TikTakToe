@@ -1,6 +1,6 @@
-# MyProject
+# TikTakToe
 
-> **Template repository** — rename all occurrences of `MyProject` (and the `src/MyProject` directories) to match your actual project name after creating a repo from this template.
+> **Template repository** — rename all occurrences of `TikTakToe` (and the `src/TikTakToe` directories) to match your actual project name after creating a repo from this template.
 
 A short, one-paragraph description of what this project does and the problem it solves.
 
@@ -22,13 +22,13 @@ A short, one-paragraph description of what this project does and the problem it 
 ├── docker-compose.yml              # Local development compose file
 ├── docs/                           # Extended documentation
 └── src/
-    ├── MyProject.slnx              # Solution file
-    ├── MyProject/                  # Main application project
+    ├── TikTakToe.slnx              # Solution file
+    ├── TikTakToe/                  # Main application project
     │   ├── Program.cs              # Entry point & DI configuration
     │   ├── Endpoints/              # Minimal-API endpoint definitions
     │   ├── Models/                 # Data models / DTOs
     │   └── Services/               # Business-logic services
-    └── MyProject.Tests/            # xUnit test project
+    └── TikTakToe.Tests/            # xUnit test project
         └── ExampleServiceTests.cs  # Example test class
 ```
 
@@ -50,7 +50,7 @@ A short, one-paragraph description of what this project does and the problem it 
 cd src
 dotnet restore
 dotnet build --configuration Release
-dotnet run --project MyProject
+dotnet run --project TikTakToe
 ```
 
 ### With Docker Compose
@@ -98,10 +98,10 @@ dotnet test --configuration Release --verbosity normal
 
 ```bash
 # Build
-docker build -t myproject:latest .
+docker build -t TikTakToe:latest .
 
 # Run
-docker run -p 8080:8080 myproject:latest
+docker run -p 8080:8080 TikTakToe:latest
 ```
 
 ---

@@ -1,4 +1,4 @@
-namespace MyProject.Models;
+namespace TikTakToe.Models;
 
 /// <summary>
 /// Represents a standard API response envelope.

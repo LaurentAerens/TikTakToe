@@ -50,12 +50,12 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Build Docker Image
-        run: docker build -t myproject:scan-test .
+        run: docker build -t TikTakToe:scan-test .
 
       - name: Run Trivy Vulnerability Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: myproject:scan-test
+          image-ref: TikTakToe:scan-test
           format: sarif
           output: trivy-container-results.sarif
           severity: CRITICAL,HIGH

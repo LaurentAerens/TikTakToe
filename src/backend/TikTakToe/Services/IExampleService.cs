@@ -1,4 +1,4 @@
-namespace MyProject.Services;
+namespace TikTakToe.Services;
 
 /// <summary>
 /// Defines the contract for the example service.

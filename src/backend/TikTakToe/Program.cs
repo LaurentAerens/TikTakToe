@@ -1,5 +1,5 @@
-using MyProject.Endpoints;
-using MyProject.Services;
+using TikTakToe.Endpoints;
+using TikTakToe.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

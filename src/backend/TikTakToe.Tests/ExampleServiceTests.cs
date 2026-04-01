@@ -1,6 +1,6 @@
-﻿using MyProject.Services;
+﻿using TikTakToe.Services;
 
-namespace MyProject.Tests;
+namespace TikTakToe.Tests;
 
 public class ExampleServiceTests
 {
