@@ -5,13 +5,13 @@ on:
     branches: [ main ]
     paths:
       - "src/**"
-      - "Dockerfile"
+      - "src/backend/Dockerfile"
       - "docker-compose.yml"
   pull_request:
     branches: [ main ]
     paths:
       - "src/**"
-      - "Dockerfile"
+      - "src/backend/Dockerfile"
       - "docker-compose.yml"
 
 concurrency:

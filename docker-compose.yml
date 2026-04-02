@@ -1,11 +1,56 @@
 services:
-  TikTakToe:
+  frontend:
+    image: nginx:alpine
+    container_name: tiktaktoe-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
+
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: src/backend/Dockerfile
+    container_name: tiktaktoe-backend
     ports:
       - "8080:8080"
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:8080
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=tiktaktoe;Username=app_user;Password=changeme
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tiktaktoe-network
     restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: tiktaktoe-postgres
+    environment:
+      - POSTGRES_DB=tiktaktoe
+      - POSTGRES_USER=app_user
+      - POSTGRES_PASSWORD=changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_user -d tiktaktoe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  tiktaktoe-network:

@@ -96,6 +96,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
+          dockerfile: src/backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_REGISTRY_USERNAME }}/tiktaktoe:${{ env.DOCKER_TAG }}
           cache-from: type=gha
