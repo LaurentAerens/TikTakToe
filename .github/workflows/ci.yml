@@ -31,6 +31,8 @@ jobs:
       project_name: TikTakToe
       project_path: src/backend/TikTakToe.slnx
       run_tests: true
+      is_pull_request: ${{ github.event_name == 'pull_request' }}
+      pr_number: ${{ github.event.pull_request.number || '' }}
 
   quality-gates:
     name: Quality Gates Summary

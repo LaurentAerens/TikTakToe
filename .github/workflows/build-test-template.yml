@@ -16,6 +16,16 @@ on:
         type: boolean
         default: true
         description: "Flag to run or skip tests"
+      is_pull_request:
+        required: false
+        type: boolean
+        default: false
+        description: "Whether the caller workflow was triggered by a pull_request event"
+      pr_number:
+        required: false
+        type: string
+        default: ""
+        description: "Pull request number from the caller workflow"
 
 env:
   DOTNET_VERSION: '10.0.x'
@@ -114,22 +124,62 @@ jobs:
           files: |
             **/test-results.trx
           check_name: Test Results
-          comment_mode: always
+          comment_mode: off
+
+      - name: Add Test Results Comment
+        if: ${{ inputs.run_tests && inputs.is_pull_request && inputs.pr_number != '' }}
+        uses: actions/github-script@v8
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          PROJECT_NAME: ${{ inputs.project_name }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = Number(process.env.PR_NUMBER);
+            const projectName = process.env.PROJECT_NAME;
+
+            const comment = `## 🧪 Test Results for ${projectName}\n\nTests have completed successfully and were published to the **Test Results** check for this workflow run.`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const existingComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('🧪 Test Results for')
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: comment
+              });
+            }
 
       - name: Add Coverage Comment
-        if: ${{ inputs.run_tests && github.event_name == 'pull_request' }}
+        if: ${{ inputs.run_tests && inputs.is_pull_request && inputs.pr_number != '' }}
         uses: actions/github-script@v8
         env:
           COVERAGE_PERCENT: ${{ steps.coverage.outputs.COVERAGE_PERCENT }}
           GITHUB_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ inputs.pr_number }}
           PROJECT_NAME: ${{ inputs.project_name }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const coverage = process.env.COVERAGE_PERCENT || '0';
             const githubRepo = process.env.GITHUB_REPO;
-            const prNumber = process.env.PR_NUMBER;
+            const prNumber = Number(process.env.PR_NUMBER);
             const projectName = process.env.PROJECT_NAME;
 
             const comment = `## 📈 Code Coverage Report for ${projectName}\n\n| Metric | Value |\n|--------|-------|\n| Line Coverage | ${coverage}% |\n| Report | [View on Codecov](https://codecov.io/gh/${githubRepo}/pull/${prNumber}) |\n\nFor detailed coverage information, see the [Codecov report](https://codecov.io/gh/${githubRepo}).`;
@@ -137,7 +187,7 @@ jobs:
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: prNumber,
             });
 
             const existingComment = comments.find(c =>
@@ -155,7 +205,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: prNumber,
                 body: comment
               });
             }
