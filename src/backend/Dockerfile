@@ -6,6 +6,7 @@ WORKDIR /src
 COPY TikTakToe.slnx ./
 COPY TikTakToe/TikTakToe.csproj TikTakToe/
 COPY TikTakToe.Tests/TikTakToe.Tests.csproj TikTakToe.Tests/
+COPY TikTakToe.Console/TikTakToe.Console.csproj TikTakToe.Console/
 
 RUN dotnet restore TikTakToe.slnx
 
