@@ -1,4 +1,5 @@
 <Solution>
-  <Project Path="TikTakToe.Tests/TikTakToe.Tests.csproj" />
   <Project Path="TikTakToe/TikTakToe.csproj" />
+  <Project Path="TikTakToe.Tests/TikTakToe.Tests.csproj" />
+  <Project Path="TikTakToe.Console/TikTakToe.Console.csproj" />
 </Solution>
