@@ -20,10 +20,9 @@ var enginePlayer = humanPlayer == 1 ? 2 : 1;
 Console.WriteLine($"\nYou are Player {humanPlayer} ({(humanPlayer == 1 ? "X" : "O")})");
 Console.WriteLine($"Engine is Player {enginePlayer} ({(enginePlayer == 1 ? "X" : "O")})\n");
 
-var gameOver = false;
 var currentPlayer = 1;
 
-while (!gameOver)
+while (true)
 {
     PrintBoard(board);
     Console.WriteLine();
@@ -89,7 +88,6 @@ while (!gameOver)
         catch (NoMoveAvailableException)
         {
             Console.WriteLine("Game Over: Board is full!");
-            gameOver = true;
             break;
         }
     }
@@ -100,19 +98,19 @@ while (!gameOver)
     {
         PrintBoard(board);
         Console.WriteLine($"\n🎉 You won! Player {humanPlayer} has three in a row!");
-        gameOver = true;
+        break;
     }
     else if (CheckWin(board, enginePlayer))
     {
         PrintBoard(board);
         Console.WriteLine($"\n😔 Engine won! Player {enginePlayer} has three in a row!");
-        gameOver = true;
+        break;
     }
     else if (IsBoardFull(board))
     {
         PrintBoard(board);
         Console.WriteLine("\n🤝 It's a draw!");
-        gameOver = true;
+        break;
     }
 }
 
