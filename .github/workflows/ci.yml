@@ -22,6 +22,7 @@ permissions:
   contents: read
   checks: write
   pull-requests: write
+  packages: read
 
 jobs:
   build-and-test:
