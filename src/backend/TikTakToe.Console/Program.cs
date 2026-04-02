@@ -10,9 +10,32 @@ while (true)
     Console.WriteLine("Choose engine:");
     Console.WriteLine("1) Random");
     Console.WriteLine("2) Classical");
-    Console.Write("Enter choice (1 or 2, default 1): ");
+    Console.WriteLine("3) HalfDepth");
+    Console.Write("Enter choice (1, 2, or 3, default 1): ");
     var engineChoice = Console.ReadLine();
-    IEngine engine = engineChoice == "2" ? new ClassicalEngine() : new RandomEngine();
+    IEngine engine = engineChoice switch
+    {
+        "2" => new ClassicalEngine(),
+        "3" => new HalfDepthEngine(),
+        _ => new RandomEngine()
+    };
+
+    // Set depth for minimax-based engines (Classical/HalfDepth)
+    int? searchDepth = null;
+    if (engine is MinimaxEngineBase)
+    {
+        Console.Write("\nSet search depth (leave blank for full search): ");
+        var depthInput = Console.ReadLine();
+        if (!string.IsNullOrWhiteSpace(depthInput) && int.TryParse(depthInput, out var depth) && depth > 0)
+        {
+            searchDepth = depth;
+            Console.WriteLine($"Search depth set to {searchDepth}");
+        }
+        else if (!string.IsNullOrWhiteSpace(depthInput))
+        {
+            Console.WriteLine("Invalid depth, using full search");
+        }
+    }
 
     // New fresh board for each game
     var board = new int[3, 3] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
@@ -91,7 +114,7 @@ while (true)
             Console.WriteLine($"Engine's turn (Player {enginePlayer})");
             try
             {
-                (board, var moveScore) = engine.Move(board, enginePlayer);
+                (board, var moveScore) = engine.Move(board, enginePlayer, searchDepth);
                 Console.WriteLine($"Engine move score: {moveScore}");
                 currentPlayer = humanPlayer;
             }
