@@ -155,6 +155,50 @@ public class EngineContractTests
         }
     }
 
+    [Theory]
+    [MemberData(nameof(EngineTypes))]
+    public void Move_WithNonStandardBoard_EitherReturnsValidResultOrThrowsBoardSizeNotSupportedException(Type engineType)
+    {
+        var engine = CreateEngine(engineType);
+        var player = 1;
+        var board = new int[4, 4]
+        {
+            { 1, 2, 1, 2 },
+            { 2, 1, 0, 1 },
+            { 1, 2, 2, 1 },
+            { 2, 1, 1, 2 }
+        };
+
+        try
+        {
+            var (updatedBoard, score) = engine.Move(board, player);
+
+            Assert.Equal(board.GetLength(0), updatedBoard.GetLength(0));
+            Assert.Equal(board.GetLength(1), updatedBoard.GetLength(1));
+            Assert.InRange(score, -1000, 1000);
+
+            var changedPositions = 0;
+            for (var x = 0; x < board.GetLength(0); x++)
+            {
+                for (var y = 0; y < board.GetLength(1); y++)
+                {
+                    if (board[x, y] != updatedBoard[x, y])
+                    {
+                        changedPositions++;
+                        Assert.Equal(0, board[x, y]);
+                        Assert.Equal(player, updatedBoard[x, y]);
+                    }
+                }
+            }
+
+            Assert.Equal(1, changedPositions);
+        }
+        catch (Exception ex)
+        {
+            Assert.IsType<BoardSizeNotSupportedException>(ex);
+        }
+    }
+
     private static IEngine CreateEngine(Type engineType)
     {
         return (IEngine)Activator.CreateInstance(engineType)!;

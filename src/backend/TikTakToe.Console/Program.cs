@@ -2,116 +2,141 @@
 using TikTakToe.Engines.Interface;
 using TikTakToe.Engines.Exceptions;
 
-var engine = new RandomEngine();
-var board = new int[3, 3] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
-
 Console.WriteLine("=== TikTakToe vs Engine ===\n");
-
-// Menu
-Console.WriteLine("Choose your player:");
-Console.WriteLine("1) Player 1 (X)");
-Console.WriteLine("2) Player 2 (O)");
-Console.Write("Enter choice (1 or 2): ");
-
-var playerChoice = Console.ReadLine();
-var humanPlayer = playerChoice == "1" ? 1 : 2;
-var enginePlayer = humanPlayer == 1 ? 2 : 1;
-
-Console.WriteLine($"\nYou are Player {humanPlayer} ({(humanPlayer == 1 ? "X" : "O")})");
-Console.WriteLine($"Engine is Player {enginePlayer} ({(enginePlayer == 1 ? "X" : "O")})\n");
-
-var currentPlayer = 1;
 
 while (true)
 {
-    PrintBoard(board);
-    Console.WriteLine();
+    // Select engine
+    Console.WriteLine("Choose engine:");
+    Console.WriteLine("1) Random");
+    Console.WriteLine("2) Classical");
+    Console.Write("Enter choice (1 or 2, default 1): ");
+    var engineChoice = Console.ReadLine();
+    IEngine engine = engineChoice == "2" ? new ClassicalEngine() : new RandomEngine();
 
-    if (currentPlayer == humanPlayer)
+    // New fresh board for each game
+    var board = new int[3, 3] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+
+    // Player selection
+    Console.WriteLine("\nChoose your player:");
+    Console.WriteLine("1) Player 1 (X)");
+    Console.WriteLine("2) Player 2 (O)");
+    Console.Write("Enter choice (1 or 2): ");
+    var playerChoice = Console.ReadLine();
+    var humanPlayer = playerChoice == "1" ? 1 : 2;
+    var enginePlayer = humanPlayer == 1 ? 2 : 1;
+
+    Console.WriteLine($"\nYou are Player {humanPlayer} ({(humanPlayer == 1 ? "X" : "O")})");
+    Console.WriteLine($"Engine is Player {enginePlayer} ({(enginePlayer == 1 ? "X" : "O")})\n");
+
+    var currentPlayer = 1;
+
+    while (true)
     {
-        // Human's turn
-        Console.WriteLine($"Your turn (Player {humanPlayer})");
-        Console.WriteLine("Enter position (0-8) or row,col (e.g., '1,2'): ");
-        var input = Console.ReadLine();
+        PrintBoard(board);
+        Console.WriteLine();
 
-        if (string.IsNullOrWhiteSpace(input))
+        if (currentPlayer == humanPlayer)
         {
-            Console.WriteLine("Invalid input. Try again.\n");
-            continue;
-        }
+            // Human's turn
+            Console.WriteLine($"Your turn (Player {humanPlayer})");
+            Console.WriteLine("Enter position (0-8) or row,col (e.g., '1,2'): ");
+            var input = Console.ReadLine();
 
-        int row, col;
-        if (input.Contains(','))
-        {
-            var parts = input.Split(',');
-            if (!int.TryParse(parts[0], out row) || !int.TryParse(parts[1], out col))
+            if (string.IsNullOrWhiteSpace(input))
             {
-                Console.WriteLine("Invalid format. Use row,col (e.g., '1,2')\n");
+                Console.WriteLine("Invalid input. Try again.\n");
                 continue;
             }
+
+            int row, col;
+            if (input.Contains(','))
+            {
+                var parts = input.Split(',');
+                if (!int.TryParse(parts[0], out row) || !int.TryParse(parts[1], out col))
+                {
+                    Console.WriteLine("Invalid format. Use row,col (e.g., '1,2')\n");
+                    continue;
+                }
+            }
+            else
+            {
+                if (!int.TryParse(input, out var pos) || pos < 0 || pos > 8)
+                {
+                    Console.WriteLine("Invalid position. Use 0-8 or row,col\n");
+                    continue;
+                }
+                row = pos / 3;
+                col = pos % 3;
+            }
+
+            if (row < 0 || row > 2 || col < 0 || col > 2)
+            {
+                Console.WriteLine("Position out of bounds. Use row,col (0-2)\n");
+                continue;
+            }
+
+            if (board[row, col] != 0)
+            {
+                Console.WriteLine("That square is already taken!\n");
+                continue;
+            }
+
+            board[row, col] = humanPlayer;
+            currentPlayer = enginePlayer;
         }
         else
         {
-            if (!int.TryParse(input, out var pos) || pos < 0 || pos > 8)
+            // Engine's turn
+            Console.WriteLine($"Engine's turn (Player {enginePlayer})");
+            try
             {
-                Console.WriteLine("Invalid position. Use 0-8 or row,col\n");
-                continue;
+                (board, var moveScore) = engine.Move(board, enginePlayer);
+                Console.WriteLine($"Engine move score: {moveScore}");
+                currentPlayer = humanPlayer;
             }
-            row = pos / 3;
-            col = pos % 3;
+            catch (NoMoveAvailableException)
+            {
+                Console.WriteLine("Game Over: Board is full!");
+                break;
+            }
+            catch (BoardSizeNotSupportedException ex)
+            {
+                Console.WriteLine($"Engine does not support this board size: {ex.Message}");
+                break;
+            }
         }
 
-        if (row < 0 || row > 2 || col < 0 || col > 2)
-        {
-            Console.WriteLine("Position out of bounds. Use row,col (0-2)\n");
-            continue;
-        }
+        Console.WriteLine();
 
-        if (board[row, col] != 0)
+        if (CheckWin(board, humanPlayer))
         {
-            Console.WriteLine("That square is already taken!\n");
-            continue;
+            PrintBoard(board);
+            Console.WriteLine($"\n🎉 You won! Player {humanPlayer} has three in a row!");
+            break;
         }
-
-        board[row, col] = humanPlayer;
-        currentPlayer = enginePlayer;
-    }
-    else
-    {
-        // Engine's turn
-        Console.WriteLine($"Engine's turn (Player {enginePlayer})");
-        try
+        else if (CheckWin(board, enginePlayer))
         {
-            (board, _) = engine.Move(board, enginePlayer);
-            currentPlayer = humanPlayer;
+            PrintBoard(board);
+            Console.WriteLine($"\n😔 Engine won! Player {enginePlayer} has three in a row!");
+            break;
         }
-        catch (NoMoveAvailableException)
+        else if (IsBoardFull(board))
         {
-            Console.WriteLine("Game Over: Board is full!");
+            PrintBoard(board);
+            Console.WriteLine("\n🤝 It's a draw!");
             break;
         }
     }
 
+    // Ask to play again
+    Console.Write("\nPlay again? (y/n, default n): ");
+    var again = Console.ReadLine();
+    if (string.IsNullOrWhiteSpace(again) || !again.Trim().ToLower().StartsWith("y"))
+    {
+        break;
+    }
     Console.WriteLine();
-
-    if (CheckWin(board, humanPlayer))
-    {
-        PrintBoard(board);
-        Console.WriteLine($"\n🎉 You won! Player {humanPlayer} has three in a row!");
-        break;
-    }
-    else if (CheckWin(board, enginePlayer))
-    {
-        PrintBoard(board);
-        Console.WriteLine($"\n😔 Engine won! Player {enginePlayer} has three in a row!");
-        break;
-    }
-    else if (IsBoardFull(board))
-    {
-        PrintBoard(board);
-        Console.WriteLine("\n🤝 It's a draw!");
-        break;
-    }
 }
 
 bool CheckWin(int[,] b, int player)
