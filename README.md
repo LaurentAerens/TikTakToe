@@ -101,10 +101,10 @@ dotnet test --configuration Release --verbosity normal
 
 ```bash
 # Build
-docker build -t TikTakToe:latest src/backend
+docker build -t tiktaktoe:latest src/backend
 
 # Run
-docker run -p 8080:8080 TikTakToe:latest
+docker run -p 8080:8080 tiktaktoe:latest
 ```
 
 ---
