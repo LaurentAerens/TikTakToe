@@ -1,6 +1,6 @@
-# MyProject
+# TikTakToe
 
-> **Template repository** — rename all occurrences of `MyProject` (and the `src/MyProject` directories) to match your actual project name after creating a repo from this template.
+> **Template repository** — rename all occurrences of `TikTakToe` (and the `src/backend/TikTakToe` directories) to match your actual project name after creating a repo from this template.
 
 A short, one-paragraph description of what this project does and the problem it solves.
 
@@ -18,18 +18,19 @@ A short, one-paragraph description of what this project does and the problem it 
 
 ```
 .
-├── Dockerfile                      # Container build definition
 ├── docker-compose.yml              # Local development compose file
 ├── docs/                           # Extended documentation
 └── src/
-    ├── MyProject.slnx              # Solution file
-    ├── MyProject/                  # Main application project
-    │   ├── Program.cs              # Entry point & DI configuration
-    │   ├── Endpoints/              # Minimal-API endpoint definitions
-    │   ├── Models/                 # Data models / DTOs
-    │   └── Services/               # Business-logic services
-    └── MyProject.Tests/            # xUnit test project
-        └── ExampleServiceTests.cs  # Example test class
+    └── backend/                    # Backend workspace
+        ├── Dockerfile              # Backend container build definition
+        ├── TikTakToe.slnx          # Solution file
+        ├── TikTakToe/              # Main application project
+        │   ├── Program.cs          # Entry point & DI configuration
+        │   ├── Endpoints/          # Minimal-API endpoint definitions
+        │   ├── Models/             # Data models / DTOs
+        │   └── Services/           # Business-logic services
+        └── TikTakToe.Tests/        # xUnit test project
+            └── ExampleServiceTests.cs  # Example test class
 ```
 
 ---
@@ -47,10 +48,10 @@ A short, one-paragraph description of what this project does and the problem it 
 ### Without Docker
 
 ```bash
-cd src
+cd src/backend
 dotnet restore
 dotnet build --configuration Release
-dotnet run --project MyProject
+dotnet run --project TikTakToe
 ```
 
 ### With Docker Compose
@@ -61,12 +62,14 @@ docker compose up -d --build
 
 The API will be available at **http://localhost:8080**.
 
+The `frontend` compose service is currently a placeholder container until the frontend app and its Dockerfile are added.
+
 ---
 
 ## 🧪 Running Tests
 
 ```bash
-cd src
+cd src/backend
 dotnet test --configuration Release --verbosity normal
 ```
 
@@ -98,10 +101,10 @@ dotnet test --configuration Release --verbosity normal
 
 ```bash
 # Build
-docker build -t myproject:latest .
+docker build -t tiktaktoe:latest src/backend
 
 # Run
-docker run -p 8080:8080 myproject:latest
+docker run -p 8080:8080 tiktaktoe:latest
 ```
 
 ---

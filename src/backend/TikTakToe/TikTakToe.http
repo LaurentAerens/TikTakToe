@@ -1,0 +1,11 @@
+@TikTakToe_HostAddress = http://localhost:8080
+
+GET {{TikTakToe_HostAddress}}/healthz
+Accept: application/json
+
+###
+
+GET {{TikTakToe_HostAddress}}/version
+Accept: application/json
+
+###

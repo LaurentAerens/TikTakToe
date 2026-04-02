@@ -5,13 +5,13 @@ on:
     branches: [ main ]
     paths:
       - "src/**"
-      - "Dockerfile"
+      - "src/backend/Dockerfile"
       - "docker-compose.yml"
   pull_request:
     branches: [ main ]
     paths:
       - "src/**"
-      - "Dockerfile"
+      - "src/backend/Dockerfile"
       - "docker-compose.yml"
 
 concurrency:
@@ -28,8 +28,8 @@ jobs:
     name: Build & Test
     uses: ./.github/workflows/build-test-template.yml
     with:
-      project_name: MyProject
-      project_path: src/MyProject.slnx
+      project_name: TikTakToe
+      project_path: src/backend/TikTakToe.slnx
       run_tests: true
 
   quality-gates:

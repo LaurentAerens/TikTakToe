@@ -3,17 +3,17 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy solution and project files first (for layer caching)
-COPY src/MyProject.slnx ./
-COPY src/MyProject/MyProject.csproj MyProject/
-COPY src/MyProject.Tests/MyProject.Tests.csproj MyProject.Tests/
+COPY TikTakToe.slnx ./
+COPY TikTakToe/TikTakToe.csproj TikTakToe/
+COPY TikTakToe.Tests/TikTakToe.Tests.csproj TikTakToe.Tests/
 
-RUN dotnet restore MyProject.slnx
+RUN dotnet restore TikTakToe.slnx
 
 # Copy source
-COPY src/MyProject/ MyProject/
+COPY TikTakToe/ TikTakToe/
 
 # Build & publish
-RUN dotnet publish MyProject/MyProject.csproj \
+RUN dotnet publish TikTakToe/TikTakToe.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish
@@ -36,4 +36,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- http://localhost:8080/healthz || exit 1
 
-ENTRYPOINT ["dotnet", "MyProject.dll"]
+ENTRYPOINT ["dotnet", "TikTakToe.dll"]

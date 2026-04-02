@@ -33,8 +33,8 @@ jobs:
     name: Build & Test
     uses: ./.github/workflows/build-test-template.yml
     with:
-      project_name: MyProject
-      project_path: src/MyProject.slnx
+      project_name: TikTakToe
+      project_path: src/backend/TikTakToe.slnx
       run_tests: true
 
   validate-and-release:
@@ -95,9 +95,10 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ./src/backend
+          file: Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_REGISTRY_USERNAME }}/myproject:${{ env.DOCKER_TAG }}
+          tags: ${{ secrets.DOCKER_REGISTRY_USERNAME }}/tiktaktoe:${{ env.DOCKER_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -133,7 +134,7 @@ jobs:
           RELEASE_NOTES+=$'\n'
           RELEASE_NOTES+="\`\`\`bash"
           RELEASE_NOTES+=$'\n'
-          RELEASE_NOTES+="docker pull $REGISTRY_USERNAME/myproject:$VERSION"
+          RELEASE_NOTES+="docker pull $REGISTRY_USERNAME/tiktaktoe:$VERSION"
           RELEASE_NOTES+=$'\n'
           RELEASE_NOTES+="\`\`\`"
           RELEASE_NOTES+=$'\n\n'

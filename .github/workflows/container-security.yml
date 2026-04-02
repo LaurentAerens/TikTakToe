@@ -4,13 +4,15 @@ on:
   push:
     branches: [ main ]
     paths:
-      - "Dockerfile"
+      - "src/backend/**"
+      - "src/backend/Dockerfile"
       - "docker-compose.yml"
       - ".github/workflows/container-security.yml"
   pull_request:
     branches: [ main ]
     paths:
-      - "Dockerfile"
+      - "src/backend/**"
+      - "src/backend/Dockerfile"
       - "docker-compose.yml"
 
 permissions:
@@ -28,7 +30,7 @@ jobs:
       - name: Run hadolint
         uses: hadolint/hadolint-action@v3.3.0
         with:
-          dockerfile: Dockerfile
+          dockerfile: src/backend/Dockerfile
           failure-threshold: warning
           format: sarif
           output-file: hadolint-results.sarif
@@ -50,12 +52,12 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Build Docker Image
-        run: docker build -t myproject:scan-test .
+        run: docker build -t tiktaktoe:scan-test src/backend
 
       - name: Run Trivy Vulnerability Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: myproject:scan-test
+          image-ref: tiktaktoe:scan-test
           format: sarif
           output: trivy-container-results.sarif
           severity: CRITICAL,HIGH
@@ -79,7 +81,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
-          scan-ref: 'Dockerfile'
+          scan-ref: 'src/backend/Dockerfile'
           format: sarif
           output: trivy-dockerfile-results.sarif
           severity: CRITICAL,HIGH

@@ -34,12 +34,12 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore Dependencies
-        run: dotnet restore src/MyProject.slnx
+        run: dotnet restore src/backend/TikTakToe.slnx
 
       - name: Run NuGet Audit
         id: audit
         run: |
-          dotnet nuget audit --format json --output audit-results.json src/MyProject.slnx || EXIT_CODE=$?
+          dotnet nuget audit --format json --output audit-results.json src/backend/TikTakToe.slnx || EXIT_CODE=$?
           if [ ! -f audit-results.json ]; then
             echo "VULNERABILITIES_FOUND=false" >> $GITHUB_OUTPUT
           elif [ "$EXIT_CODE" = "1" ]; then

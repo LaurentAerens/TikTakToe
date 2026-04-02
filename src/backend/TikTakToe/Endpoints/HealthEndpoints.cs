@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace MyProject.Endpoints;
+namespace TikTakToe.Endpoints;
 
 /// <summary>
 /// Health and version check endpoints.

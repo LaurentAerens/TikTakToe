@@ -1,4 +1,4 @@
-namespace MyProject.Services;
+namespace TikTakToe.Services;
 
 /// <summary>
 /// A simple example service implementation.
