@@ -130,12 +130,15 @@ jobs:
         if: ${{ inputs.run_tests }}
         id: test-stats
         run: |
-          if [ -f "./coverage/test-results.trx" ]; then
+          # Find the TRX file in the coverage directory tree
+          TRX_FILE=$(find ./coverage -name "test-results.trx" -type f | head -1)
+          
+          if [ -n "$TRX_FILE" ]; then
             # Parse TRX XML to extract test counts
-            TOTAL=$(grep -o 'total="[0-9]*"' ./coverage/test-results.trx | head -1 | grep -o '[0-9]*')
-            PASSED=$(grep -o 'passed="[0-9]*"' ./coverage/test-results.trx | head -1 | grep -o '[0-9]*')
-            FAILED=$(grep -o 'failed="[0-9]*"' ./coverage/test-results.trx | head -1 | grep -o '[0-9]*')
-            SKIPPED=$(grep -o 'skipped="[0-9]*"' ./coverage/test-results.trx | head -1 | grep -o '[0-9]*')
+            TOTAL=$(grep -o 'total="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
+            PASSED=$(grep -o 'passed="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
+            FAILED=$(grep -o 'failed="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
+            SKIPPED=$(grep -o 'skipped="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
             
             # Set defaults if parsing failed
             PASSED=${PASSED:-0}
@@ -147,6 +150,11 @@ jobs:
             echo "FAILED=$FAILED" >> $GITHUB_OUTPUT
             echo "SKIPPED=$SKIPPED" >> $GITHUB_OUTPUT
             echo "TOTAL=$TOTAL" >> $GITHUB_OUTPUT
+          else
+            echo "PASSED=0" >> $GITHUB_OUTPUT
+            echo "FAILED=0" >> $GITHUB_OUTPUT
+            echo "SKIPPED=0" >> $GITHUB_OUTPUT
+            echo "TOTAL=0" >> $GITHUB_OUTPUT
           fi
 
       - name: Add Test Results Comment
