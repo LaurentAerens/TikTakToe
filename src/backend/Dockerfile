@@ -3,14 +3,14 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy solution and project files first (for layer caching)
-COPY src/backend/TikTakToe.slnx ./
-COPY src/backend/TikTakToe/TikTakToe.csproj TikTakToe/
-COPY src/backend/TikTakToe.Tests/TikTakToe.Tests.csproj TikTakToe.Tests/
+COPY TikTakToe.slnx ./
+COPY TikTakToe/TikTakToe.csproj TikTakToe/
+COPY TikTakToe.Tests/TikTakToe.Tests.csproj TikTakToe.Tests/
 
 RUN dotnet restore TikTakToe.slnx
 
 # Copy source
-COPY src/backend/TikTakToe/ TikTakToe/
+COPY TikTakToe/ TikTakToe/
 
 # Build & publish
 RUN dotnet publish TikTakToe/TikTakToe.csproj \

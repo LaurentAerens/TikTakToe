@@ -13,8 +13,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: src/backend/Dockerfile
+      context: ./src/backend
+      dockerfile: Dockerfile
     container_name: tiktaktoe-backend
     ports:
       - "8080:8080"
