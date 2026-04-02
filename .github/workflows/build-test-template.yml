@@ -129,33 +129,44 @@ jobs:
       - name: Extract Test Statistics
         if: ${{ inputs.run_tests }}
         id: test-stats
+        shell: python
         run: |
-          # Find the TRX file in the coverage directory tree
-          TRX_FILE=$(find ./coverage -name "test-results.trx" -type f | head -1)
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
           
-          if [ -n "$TRX_FILE" ]; then
-            # Parse TRX XML to extract test counts
-            TOTAL=$(grep -o 'total="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
-            PASSED=$(grep -o 'passed="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
-            FAILED=$(grep -o 'failed="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
-            SKIPPED=$(grep -o 'skipped="[0-9]*"' "$TRX_FILE" | head -1 | grep -o '[0-9]*')
-            
-            # Set defaults if parsing failed
-            PASSED=${PASSED:-0}
-            FAILED=${FAILED:-0}
-            SKIPPED=${SKIPPED:-0}
-            TOTAL=${TOTAL:-$((PASSED + FAILED + SKIPPED))}
-            
-            echo "PASSED=$PASSED" >> $GITHUB_OUTPUT
-            echo "FAILED=$FAILED" >> $GITHUB_OUTPUT
-            echo "SKIPPED=$SKIPPED" >> $GITHUB_OUTPUT
-            echo "TOTAL=$TOTAL" >> $GITHUB_OUTPUT
-          else
-            echo "PASSED=0" >> $GITHUB_OUTPUT
-            echo "FAILED=0" >> $GITHUB_OUTPUT
-            echo "SKIPPED=0" >> $GITHUB_OUTPUT
-            echo "TOTAL=0" >> $GITHUB_OUTPUT
-          fi
+          # Find the TRX file
+          trx_files = list(Path('./coverage').rglob('test-results.trx')) if os.path.exists('./coverage') else []
+          
+          passed = failed = skipped = 0
+          
+          if trx_files:
+            try:
+              tree = ET.parse(str(trx_files[0]))
+              root = tree.getroot()
+              
+              # TRX namespace
+              ns = {'trx': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+              
+              # Count by outcome
+              for result in root.findall('.//trx:UnitTestResult', ns):
+                outcome = result.get('outcome', '').lower()
+                if outcome == 'passed':
+                  passed += 1
+                elif outcome == 'failed':
+                  failed += 1
+                elif outcome == 'notexecuted':
+                  skipped += 1
+            except Exception as e:
+              print(f"Warning: Failed to parse TRX: {e}")
+          
+          total = passed + failed + skipped
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            f.write(f'PASSED={passed}\n')
+            f.write(f'FAILED={failed}\n')
+            f.write(f'SKIPPED={skipped}\n')
+            f.write(f'TOTAL={total}\n')
 
       - name: Add Test Results Comment
         if: ${{ inputs.run_tests && inputs.is_pull_request && inputs.pr_number != '' }}
