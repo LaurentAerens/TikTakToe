@@ -126,19 +126,81 @@ jobs:
           check_name: Test Results
           comment_mode: off
 
+      - name: Extract Test Statistics
+        if: ${{ inputs.run_tests }}
+        id: test-stats
+        shell: python
+        run: |
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          
+          # Find the TRX file
+          trx_files = list(Path('./coverage').rglob('test-results.trx')) if os.path.exists('./coverage') else []
+          
+          passed = failed = skipped = 0
+          
+          if trx_files:
+            try:
+              tree = ET.parse(str(trx_files[0]))
+              root = tree.getroot()
+              
+              # TRX namespace
+              ns = {'trx': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+              
+              # Count by outcome
+              for result in root.findall('.//trx:UnitTestResult', ns):
+                outcome = result.get('outcome', '').lower()
+                if outcome == 'passed':
+                  passed += 1
+                elif outcome == 'failed':
+                  failed += 1
+                elif outcome == 'notexecuted':
+                  skipped += 1
+            except Exception as e:
+              print(f"Warning: Failed to parse TRX: {e}")
+          
+          total = passed + failed + skipped
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            f.write(f'PASSED={passed}\n')
+            f.write(f'FAILED={failed}\n')
+            f.write(f'SKIPPED={skipped}\n')
+            f.write(f'TOTAL={total}\n')
+
       - name: Add Test Results Comment
         if: ${{ inputs.run_tests && inputs.is_pull_request && inputs.pr_number != '' }}
         uses: actions/github-script@v8
         env:
           PR_NUMBER: ${{ inputs.pr_number }}
           PROJECT_NAME: ${{ inputs.project_name }}
+          PASSED: ${{ steps.test-stats.outputs.PASSED || '0' }}
+          FAILED: ${{ steps.test-stats.outputs.FAILED || '0' }}
+          SKIPPED: ${{ steps.test-stats.outputs.SKIPPED || '0' }}
+          TOTAL: ${{ steps.test-stats.outputs.TOTAL || '0' }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const prNumber = Number(process.env.PR_NUMBER);
             const projectName = process.env.PROJECT_NAME;
+            const passed = process.env.PASSED || '0';
+            const failed = process.env.FAILED || '0';
+            const skipped = process.env.SKIPPED || '0';
+            const total = process.env.TOTAL || '0';
 
-            const comment = `## 🧪 Test Results for ${projectName}\n\nTests have completed successfully and were published to the **Test Results** check for this workflow run.`;
+            let comment = `## 🧪 Test Results for ${projectName}\n\n`;
+            
+            if (total > 0) {
+              const statusIcon = failed === '0' ? '✅' : '❌';
+              comment += `${statusIcon} **${total} tests** executed\n\n`;
+              comment += `| Status | Count |\n`;
+              comment += `|--------|-------|\n`;
+              comment += `| ✅ Passed | ${passed} |\n`;
+              comment += `| ❌ Failed | ${failed} |\n`;
+              comment += `| ⊘ Skipped | ${skipped} |\n\n`;
+            }
+            
+            comment += `Tests have been published to the **Test Results** check for this workflow run.`;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
