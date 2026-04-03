@@ -6,6 +6,9 @@ namespace TikTakToe.Engines.Search;
 /// </summary>
 public interface IOpponentStrategy
 {
+    /// <summary>
+    /// Aggregates child move scores for the current search node.
+    /// </summary>
     /// <param name="scores">Scores of all legal moves at this node.</param>
     /// <param name="currentPlayer">The player moving at this node (1 or 2).</param>
     /// <param name="enginePlayer">The player the engine is playing as (constant throughout the search).</param>
