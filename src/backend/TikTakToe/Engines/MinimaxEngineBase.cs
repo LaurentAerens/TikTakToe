@@ -5,19 +5,18 @@ using TikTakToe.Engines.Exceptions;
 namespace TikTakToe.Engines;
 
 /// <summary>
-/// Classical minimax engine for 3x3 Tic-Tac-Toe.
-/// Defaults to full-resolution search (searches remaining empty squares) when no depth is provided.
-/// The root expansion is evaluated in parallel to utilize multiple cores; deeper recursion is sequential.
-/// When a search depth limit is hit during recursion, nodes return score 0 (non-terminal heuristic).
+/// Abstract base class for minimax-based engines.
+/// Provides the complete minimax search algorithm with parallel root expansion.
+/// Subclasses only need to implement board evaluation logic via EvalBoard().
 /// </summary>
-public sealed class ClassicalEngine : IEngine
+public abstract class MinimaxEngineBase : IEngine
 {
     public (int[,] Board, int Score) Move(int[,] board, int player, int? depth = null)
     {
         // This engine only supports 3x3 boards. Reject other sizes early.
         if (board.GetLength(0) != 3 || board.GetLength(1) != 3)
         {
-            throw new BoardSizeNotSupportedException(nameof(ClassicalEngine), board.GetLength(0), board.GetLength(1));
+            throw new BoardSizeNotSupportedException(nameof(MinimaxEngineBase), board.GetLength(0), board.GetLength(1));
         }
 
         // Count empty squares so we can default to a full-resolution search when depth is not provided.
@@ -43,12 +42,13 @@ public sealed class ClassicalEngine : IEngine
         var useDepth = depth ?? remaining;
         return StartMinimax(board, player, useDepth);
     }
+
     public int Eval(int[,] board, int player, int? depth = null)
     {
         // Ensure this engine only evaluates 3x3 boards
         if (board.GetLength(0) != 3 || board.GetLength(1) != 3)
         {
-            throw new BoardSizeNotSupportedException(nameof(ClassicalEngine), board.GetLength(0), board.GetLength(1));
+            throw new BoardSizeNotSupportedException(nameof(MinimaxEngineBase), board.GetLength(0), board.GetLength(1));
         }
         if (depth.HasValue)
         {
@@ -190,59 +190,17 @@ public sealed class ClassicalEngine : IEngine
 
         return moves;
     }
-    
+
     private int ChangePlayer(int player)
     {
         return player == 1 ? 2 : 1;
     }
 
-    private int EvalBoard(int[,] board)
-    {
-        // Fast center-first checks: many winning lines include the center cell.
-        // Checking center ownership first is a small optimization.
-        if (board[1, 1] == 1 &&
-            (
-                (board[0, 0] == 1 && board[2, 2] == 1) ||
-                (board[0, 2] == 1 && board[2, 0] == 1) ||
-                (board[0, 1] == 1 && board[2, 1] == 1) ||
-                (board[1, 0] == 1 && board[1, 2] == 1)
-            ))
-        {
-            return 1000;
-        }
-
-        if (board[1, 1] == 2 &&
-            (
-                (board[0, 0] == 2 && board[2, 2] == 2) ||
-                (board[0, 2] == 2 && board[2, 0] == 2) ||
-                (board[0, 1] == 2 && board[2, 1] == 2) ||
-                (board[1, 0] == 2 && board[1, 2] == 2)
-            ))
-        {
-            return -1000;
-        }
-
-        // Row and column wins (non-center dependent)
-        if ((board[0,0] == 1 && board[0,1] == 1 && board[0,2] == 1) ||
-            (board[1,0] == 1 && board[1,1] == 1 && board[1,2] == 1) ||
-            (board[2,0] == 1 && board[2,1] == 1 && board[2,2] == 1) ||
-            (board[0,0] == 1 && board[1,0] == 1 && board[2,0] == 1) ||
-            (board[0,1] == 1 && board[1,1] == 1 && board[2,1] == 1) ||
-            (board[0,2] == 1 && board[1,2] == 1 && board[2,2] == 1))
-        {
-            return 1000;
-        }
-
-        if ((board[0,0] == 2 && board[0,1] == 2 && board[0,2] == 2) ||
-            (board[1,0] == 2 && board[1,1] == 2 && board[1,2] == 2) ||
-            (board[2,0] == 2 && board[2,1] == 2 && board[2,2] == 2) ||
-            (board[0,0] == 2 && board[1,0] == 2 && board[2,0] == 2) ||
-            (board[0,1] == 2 && board[1,1] == 2 && board[2,1] == 2) ||
-            (board[0,2] == 2 && board[1,2] == 2 && board[2,2] == 2))
-        {
-            return -1000;
-        }
-        return 0;
-    }
-      
+    /// <summary>
+    /// Evaluates the board state. Should return:
+    /// - 1000 if player 1 has won
+    /// - -1000 if player 2 has won
+    /// - 0 for draw/neutral positions
+    /// </summary>
+    protected abstract int EvalBoard(int[,] board);
 }
