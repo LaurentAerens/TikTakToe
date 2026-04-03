@@ -1,8 +1,12 @@
 # Documentation
 
-Place extended documentation in this directory.
+Extended documentation lives in this directory.
 
-Suggested structure:
+## Available docs
+
+- [`engines.md`](engines.md) — engine architecture, interfaces, available implementations, and a guide on creating a new engine
+
+## Suggested additions
 
 - `architecture.md` — system design and architecture diagrams
 - `api.md` — API endpoint reference
