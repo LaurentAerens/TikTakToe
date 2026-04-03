@@ -1,16 +1,27 @@
 using System.Threading.Tasks;
+using TikTakToe.Engines.Evaluation;
 using TikTakToe.Engines.Interface;
 using TikTakToe.Engines.Exceptions;
+using TikTakToe.Engines.Search;
 
 namespace TikTakToe.Engines;
 
 /// <summary>
 /// Abstract base class for minimax-based engines.
 /// Provides the complete minimax search algorithm with parallel root expansion.
-/// Subclasses only need to implement board evaluation logic via EvalBoard().
+/// Concrete engines compose this base with an <see cref="IBoardEvaluator"/> implementation.
 /// </summary>
 public abstract class MinimaxEngineBase : IEngine
 {
+    private readonly IBoardEvaluator _boardEvaluator;
+    private readonly IOpponentStrategy _opponentStrategy;
+
+    protected MinimaxEngineBase(IBoardEvaluator boardEvaluator, IOpponentStrategy? opponentStrategy = null)
+    {
+        _boardEvaluator = boardEvaluator;
+        _opponentStrategy = opponentStrategy ?? new MinimaxOpponentStrategy();
+    }
+
     public (int[,] Board, int Score) Move(int[,] board, int player, int? depth = null)
     {
         // This engine only supports 3x3 boards. Reject other sizes early.
@@ -52,11 +63,11 @@ public abstract class MinimaxEngineBase : IEngine
         }
         if (depth.HasValue)
         {
-            var (_, score) = MinimaxRecursive(board, player, depth.Value);
+            var (_, score) = MinimaxRecursive(board, player, depth.Value, player);
             return score;
         }
 
-        return EvalBoard(board);
+        return _boardEvaluator.Evaluate(board);
     }
 
     /// <summary>
@@ -66,6 +77,7 @@ public abstract class MinimaxEngineBase : IEngine
     /// </summary>
     private (int[,] Board, int Score) StartMinimax(int[,] board, int player, int depth)
     {
+        var enginePlayer = player;
         var moves = GenerateMoves(board, player);
 
         var bestMove = moves[0];
@@ -80,7 +92,7 @@ public abstract class MinimaxEngineBase : IEngine
 
             Parallel.For(0, moves.Count, i =>
             {
-                var (_, moveScore) = MinimaxRecursive(moves[i], ChangePlayer(player), depth - 1);
+                var (_, moveScore) = MinimaxRecursive(moves[i], ChangePlayer(player), depth - 1, enginePlayer);
                 scores[i] = moveScore;
             });
 
@@ -110,7 +122,7 @@ public abstract class MinimaxEngineBase : IEngine
 
         // Single-move sequential evaluation: directly return that move with its score.
         {
-            var (_, moveScore) = MinimaxRecursive(moves[0], ChangePlayer(player), depth - 1);
+            var (_, moveScore) = MinimaxRecursive(moves[0], ChangePlayer(player), depth - 1, enginePlayer);
             return (moves[0], moveScore);
         }
     }
@@ -119,10 +131,11 @@ public abstract class MinimaxEngineBase : IEngine
     /// Recursive Minimax used for non-root nodes. Stops when a terminal win/loss
     /// is detected (returns +/-1000). If the search depth reaches zero before a
     /// terminal node, returns 0 (neutral heuristic as per design choice).
+    /// The opponent aggregation strategy controls how non-engine nodes score their children.
     /// </summary>
-    private (int[,] Board, int Score) MinimaxRecursive(int[,] board, int player, int depth)
+    private (int[,] Board, int Score) MinimaxRecursive(int[,] board, int player, int depth, int enginePlayer)
     {
-        var score = EvalBoard(board);
+        var score = _boardEvaluator.Evaluate(board);
         if (score == 1000 || score == -1000)
         {
             return (board, score);
@@ -141,31 +154,17 @@ public abstract class MinimaxEngineBase : IEngine
             return (board, 0);
         }
 
-        var bestMove = moves[0];
-        var bestScore = player == 1 ? int.MinValue : int.MaxValue;
-
-        foreach (var move in moves)
+        // Collect all child scores, then let the strategy decide how to aggregate.
+        // The returned board is always discarded by callers, so moves[0] is a safe placeholder.
+        var childScores = new int[moves.Count];
+        for (var i = 0; i < moves.Count; i++)
         {
-            var (_, moveScore) = MinimaxRecursive(move, ChangePlayer(player), depth - 1);
-            if (player == 1)
-            {
-                if (moveScore > bestScore)
-                {
-                    bestScore = moveScore;
-                    bestMove = move;
-                }
-            }
-            else
-            {
-                if (moveScore < bestScore)
-                {
-                    bestScore = moveScore;
-                    bestMove = move;
-                }
-            }
+            var (_, moveScore) = MinimaxRecursive(moves[i], ChangePlayer(player), depth - 1, enginePlayer);
+            childScores[i] = moveScore;
         }
 
-        return (bestMove, bestScore);
+        var aggregated = _opponentStrategy.AggregateScores(childScores, player, enginePlayer);
+        return (moves[0], aggregated);
     }
 
     private List<int[,]> GenerateMoves(int[,] board, int player)
@@ -196,11 +195,4 @@ public abstract class MinimaxEngineBase : IEngine
         return player == 1 ? 2 : 1;
     }
 
-    /// <summary>
-    /// Evaluates the board state. Should return:
-    /// - 1000 if player 1 has won
-    /// - -1000 if player 2 has won
-    /// - 0 for draw/neutral positions
-    /// </summary>
-    protected abstract int EvalBoard(int[,] board);
 }
