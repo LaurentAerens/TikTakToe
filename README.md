@@ -1,16 +1,14 @@
 # TikTakToe
 
-> **Template repository** — rename all occurrences of `TikTakToe` (and the `src/backend/TikTakToe` directories) to match your actual project name after creating a repo from this template.
-
-A short, one-paragraph description of what this project does and the problem it solves.
+A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Each engine has a different strategy — from brute-force minimax to heuristic and randomised approaches — making it easy to compare opponent difficulty levels or build your own engine on top of the shared interface.
 
 ---
 
 ## 🚀 Features
 
-- ✅ **Feature one** – describe it briefly.
-- ✅ **Feature two** – describe it briefly.
-- ✅ **Feature three** – describe it briefly.
+- ✅ **Multiple AI engines** – classical minimax, heuristic half-depth, random, and opportunity-based engines out of the box.
+- ✅ **Composable engine architecture** – mix and match board evaluators with opponent strategies to produce new engine behaviour.
+- ✅ **Parallel root search** – the minimax base class evaluates root-level moves in parallel for faster response times.
 
 ---
 
@@ -20,6 +18,7 @@ A short, one-paragraph description of what this project does and the problem it 
 .
 ├── docker-compose.yml              # Local development compose file
 ├── docs/                           # Extended documentation
+│   └── engines.md                  # Engine architecture, interfaces & guide
 └── src/
     └── backend/                    # Backend workspace
         ├── Dockerfile              # Backend container build definition
@@ -28,9 +27,15 @@ A short, one-paragraph description of what this project does and the problem it 
         │   ├── Program.cs          # Entry point & DI configuration
         │   ├── Endpoints/          # Minimal-API endpoint definitions
         │   ├── Models/             # Data models / DTOs
-        │   └── Services/           # Business-logic services
+        │   ├── Services/           # Business-logic services
+        │   └── Engines/            # AI engine implementations
+        │       ├── Interface/      # IEngine contract
+        │       ├── Evaluation/     # Board evaluator implementations
+        │       ├── Search/         # Opponent strategy implementations
+        │       └── Exceptions/     # Engine-specific exceptions
+        ├── TikTakToe.Console/      # Console test harness
         └── TikTakToe.Tests/        # xUnit test project
-            └── ExampleServiceTests.cs  # Example test class
+            └── engines/            # Engine contract & behaviour tests
 ```
 
 ---
@@ -75,14 +80,18 @@ dotnet test --configuration Release --verbosity normal
 
 ---
 
+## 🤖 Engines
+
+See [docs/engines.md](docs/engines.md) for a full reference of the available AI engines, the `IEngine` interface, how board evaluation and opponent strategies work, and a step-by-step guide to creating your own engine.
+
+---
+
 ## 🌐 API Endpoints
 
 | Method | Endpoint   | Description          |
 |--------|------------|----------------------|
 | `GET`  | `/healthz` | Health check         |
 | `GET`  | `/version` | Application version  |
-
-> Replace this table with your actual endpoints.
 
 ---
 
@@ -92,8 +101,6 @@ dotnet test --configuration Release --verbosity normal
 |--------------------------|---------|------------------------------------|
 | `ASPNETCORE_URLS`        | `http://+:8080` | Listening address          |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | Runtime environment           |
-
-> Add all relevant environment variables here.
 
 ---
 
