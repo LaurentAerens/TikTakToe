@@ -4,16 +4,18 @@ using TikTakToe.Engines.Interface;
 
 namespace TikTakToe.Tests.Engines;
 
-public class MinimaxEngineBehaviorTest
+public class SearchEngineBehaviorTest
 {
-    public static IEnumerable<object[]> MinimaxEngineFactories()
+    public static IEnumerable<object[]> SearchEngineFactories()
     {
         yield return new object[] { new Func<IEngine>(() => new ClassicalEngine()) };
         yield return new object[] { new Func<IEngine>(() => new HalfDepthEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new OppertunityEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new HalftunityEngine()) };
     }
 
     [Theory]
-    [MemberData(nameof(MinimaxEngineFactories))]
+    [MemberData(nameof(SearchEngineFactories))]
     public void Eval_WithDepthZero_Returns0_ForNonTerminalBoard(Func<IEngine> factory)
     {
         var engine = factory();
@@ -30,7 +32,7 @@ public class MinimaxEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(MinimaxEngineFactories))]
+    [MemberData(nameof(SearchEngineFactories))]
     public void Eval_NonStandardBoard_ThrowsBoardSizeNotSupportedException(Func<IEngine> factory)
     {
         var engine = factory();
@@ -49,7 +51,7 @@ public class MinimaxEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(MinimaxEngineFactories))]
+    [MemberData(nameof(SearchEngineFactories))]
     public void Move_WithFullBoard_ThrowsNoMoveAvailableException(Func<IEngine> factory)
     {
         var engine = factory();
@@ -67,7 +69,7 @@ public class MinimaxEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(MinimaxEngineFactories))]
+    [MemberData(nameof(SearchEngineFactories))]
     public void Move_WithSingleAvailableMove_ReturnsThatMoveAndScore(Func<IEngine> factory)
     {
         var engine = factory();
@@ -99,7 +101,7 @@ public class MinimaxEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(MinimaxEngineFactories))]
+    [MemberData(nameof(SearchEngineFactories))]
     public void Move_PicksImmediateWin_ForPlayer1(Func<IEngine> factory)
     {
         var engine = factory();
@@ -117,7 +119,7 @@ public class MinimaxEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(MinimaxEngineFactories))]
+    [MemberData(nameof(SearchEngineFactories))]
     public void Move_PicksImmediateWin_ForPlayer2(Func<IEngine> factory)
     {
         var engine = factory();
@@ -135,8 +137,8 @@ public class MinimaxEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(MinimaxEngineFactories))]
-    public void Eval_FullBoard_WithDepth_Returns0_MinimaxNoMovesBranch(Func<IEngine> factory)
+    [MemberData(nameof(SearchEngineFactories))]
+    public void Eval_FullBoard_WithDepth_Returns0_NoMovesBranch(Func<IEngine> factory)
     {
         var engine = factory();
         var fullBoard = new int[3, 3]

@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using TikTakToe.Engines;
+using TikTakToe.Engines.Evaluation;
 
 namespace TikTakToe.Tests.Engines;
 
-public class ClassicalEngineTest
+public class ClassicalBoardEvaluatorTest
 {
 	[Fact]
 	public void Eval_Player1RowWin_Returns1000()
 	{
-		var engine = new ClassicalEngine();
+		var evaluator = new ClassicalBoardEvaluator();
 		var board = new int[3,3]
 		{
 			{ 1, 1, 1 },
@@ -16,7 +16,7 @@ public class ClassicalEngineTest
 			{ 0, 0, 2 }
 		};
 
-		var score = engine.Eval(board, player: 1);
+		var score = evaluator.Evaluate(board);
 
 		Assert.Equal(1000, score);
 	}
@@ -24,7 +24,7 @@ public class ClassicalEngineTest
 	[Fact]
 	public void Eval_Player2DiagonalWin_ReturnsMinus1000()
 	{
-		var engine = new ClassicalEngine();
+		var evaluator = new ClassicalBoardEvaluator();
 		var board = new int[3,3]
 		{
 			{ 2, 1, 1 },
@@ -32,7 +32,7 @@ public class ClassicalEngineTest
 			{ 0, 0, 2 }
 		};
 
-		var score = engine.Eval(board, player: 1);
+		var score = evaluator.Evaluate(board);
 
 		Assert.Equal(-1000, score);
 	}
@@ -40,7 +40,7 @@ public class ClassicalEngineTest
 	[Fact]
 	public void Eval_CenterAndOppositeCorners_Player1_Returns1000()
 	{
-		var engine = new ClassicalEngine();
+		var evaluator = new ClassicalBoardEvaluator();
 		var board = new int[3,3]
 		{
 			{ 1, 0, 0 },
@@ -48,7 +48,7 @@ public class ClassicalEngineTest
 			{ 0, 0, 1 }
 		};
 
-		var score = engine.Eval(board, player: 1);
+		var score = evaluator.Evaluate(board);
 
 		Assert.Equal(1000, score);
 	}
@@ -56,7 +56,7 @@ public class ClassicalEngineTest
 	[Fact]
 	public void Eval_CenterAndVerticalSides_Player1_Returns1000()
 	{
-		var engine = new ClassicalEngine();
+		var evaluator = new ClassicalBoardEvaluator();
 		var board = new int[3,3]
 		{
 			{ 0, 1, 0 },
@@ -64,7 +64,7 @@ public class ClassicalEngineTest
 			{ 0, 1, 0 }
 		};
 
-		var score = engine.Eval(board, player: 1);
+		var score = evaluator.Evaluate(board);
 
 		Assert.Equal(1000, score);
 	}
@@ -72,7 +72,7 @@ public class ClassicalEngineTest
 	[Fact]
 	public void Eval_CenterAndOppositeCorners_Player2_ReturnsMinus1000()
 	{
-		var engine = new ClassicalEngine();
+		var evaluator = new ClassicalBoardEvaluator();
 		var board = new int[3,3]
 		{
 			{ 2, 0, 0 },
@@ -80,7 +80,7 @@ public class ClassicalEngineTest
 			{ 0, 0, 2 }
 		};
 
-		var score = engine.Eval(board, player: 1);
+		var score = evaluator.Evaluate(board);
 
 		Assert.Equal(-1000, score);
 	}
@@ -88,7 +88,7 @@ public class ClassicalEngineTest
 	[Fact]
 	public void Eval_FullDrawBoard_Returns0()
 	{
-		var engine = new ClassicalEngine();
+		var evaluator = new ClassicalBoardEvaluator();
 		var board = new int[3,3]
 		{
 			{ 1, 2, 1 },
@@ -96,7 +96,7 @@ public class ClassicalEngineTest
 			{ 2, 1, 2 }
 		};
 
-		var score = engine.Eval(board, player: 1);
+		var score = evaluator.Evaluate(board);
 
 		Assert.Equal(0, score);
 	}
@@ -128,14 +128,10 @@ public class ClassicalEngineTest
 	[MemberData(nameof(WinningBoards))]
 	public void Eval_WinningBoards_ReturnsExpectedTerminalScore(int[,] board, int expected)
 	{
-		var engine = new ClassicalEngine();
+		var evaluator = new ClassicalBoardEvaluator();
+		var score = evaluator.Evaluate(board);
 
-		// Terminal detection should be independent of depth value.
-		var scoreDefault = engine.Eval(board, player: 1);
-		var scoreWithDepth = engine.Eval(board, player: 1, depth: 3);
-
-		Assert.Equal(expected, scoreDefault);
-		Assert.Equal(expected, scoreWithDepth);
+		Assert.Equal(expected, score);
 	}
 }
 
