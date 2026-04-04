@@ -20,22 +20,26 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
 ├── docs/                           # Extended documentation
 │   └── engines.md                  # Engine architecture, interfaces & guide
 └── src/
-    └── backend/                    # Backend workspace
-        ├── Dockerfile              # Backend container build definition
-        ├── TikTakToe.slnx          # Solution file
-        ├── TikTakToe/              # Main application project
-        │   ├── Program.cs          # Entry point & DI configuration
-        │   ├── Endpoints/          # Minimal-API endpoint definitions
-        │   ├── Models/             # Data models / DTOs
-        │   ├── Services/           # Business-logic services
-        │   └── Engines/            # AI engine implementations
-        │       ├── Interface/      # IEngine contract
-        │       ├── Evaluation/     # Board evaluator implementations
-        │       ├── Search/         # Opponent strategy implementations
-        │       └── Exceptions/     # Engine-specific exceptions
-        ├── TikTakToe.Console/      # Console test harness
-        └── TikTakToe.Tests/        # xUnit test project
-            └── engines/            # Engine contract & behaviour tests
+    ├── backend/                    # Backend workspace
+    │   ├── Dockerfile              # Backend container build definition
+    │   ├── TikTakToe.slnx          # Solution file
+    │   ├── TikTakToe/              # Main application project
+    │   │   ├── Program.cs          # Entry point & DI configuration
+    │   │   ├── Endpoints/          # Minimal-API endpoint definitions
+    │   │   ├── Models/             # Data models / DTOs
+    │   │   ├── Services/           # Business-logic services
+    │   │   └── Engines/            # AI engine implementations
+    │   │       ├── Interface/      # IEngine contract
+    │   │       ├── Evaluation/     # Board evaluator implementations
+    │   │       ├── Search/         # Opponent strategy implementations
+    │   │       └── Exceptions/     # Engine-specific exceptions
+    │   ├── TikTakToe.Console/      # Console test harness
+    │   └── TikTakToe.Tests/        # xUnit test project
+    │       └── engines/            # Engine contract & behaviour tests
+    └── frontend/                   # Frontend workspace
+        ├── src/                    # Code folder
+            ├── main.tsx            # Images
+            └── main.tsx            # Entry point
 ```
 
 ---
@@ -50,7 +54,9 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
 
 ## 🧱 Build & Run Locally
 
-### Without Docker
+### Backend
+
+#### Without Docker
 
 ```bash
 cd src/backend
@@ -59,7 +65,7 @@ dotnet build --configuration Release
 dotnet run --project TikTakToe
 ```
 
-### With Docker Compose
+#### With Docker Compose
 
 ```bash
 docker compose up -d --build
@@ -67,7 +73,48 @@ docker compose up -d --build
 
 The API will be available at **http://localhost:8080**.
 
-The `frontend` compose service is currently a placeholder container until the frontend app and its Dockerfile are added.
+### Frontend
+
+#### Development
+
+```bash
+cd src/frontend
+docker compose up dev --watch
+```
+
+Frontend will be avalible on **http://localhost:5173**.
+
+##### Using Yarn
+
+```bash
+cd src/frontend
+yarn dev
+```
+
+##### Without compose
+
+```bash
+cd src/frontend
+docker build -t tiktaktoe-frontend-dev -f Dockerfile.dev .
+docker run -p 5173:5173 tiktaktoe-frontend-dev
+```
+
+#### Production
+
+```bash
+cd src/frontend
+docker compose up prod
+```
+
+Frontend will be avalible on **http://localhost:3000**.
+
+##### Without compose
+
+```bash
+cd src/frontend
+docker build -t tiktaktoe-frontend -f Dockerfile .
+docker run -p 3000:3000 tiktaktoe-frontend
+```
 
 ---
 
