@@ -11,7 +11,7 @@ const RAW_RUNTIME_STATE =
   ],\
   "dependencyTreeRoots": [\
     {\
-      "name": "my-react-app",\
+      "name": "tiktaktoe-frontend",\
       "reference": "workspace:."\
     }\
   ],\
@@ -19,7 +19,7 @@ const RAW_RUNTIME_STATE =
   "ignorePatternData": "(^(?:\\\\.yarn\\\\/sdks(?:\\\\/(?!\\\\.{1,2}(?:\\\\/|$))(?:(?:(?!(?:^|\\\\/)\\\\.{1,2}(?:\\\\/|$)).)*?)|$))$)",\
   "pnpZipBackend": "libzip",\
   "fallbackExclusionList": [\
-    ["my-react-app", ["workspace:."]]\
+    ["tiktaktoe-frontend", ["workspace:."]]\
   ],\
   "fallbackPool": [\
   ],\
@@ -37,7 +37,7 @@ const RAW_RUNTIME_STATE =
           ["eslint-plugin-react-hooks", "virtual:92d01c77b93de00ee522a67f45e19b429133990cbb6dbd9358d1aa88eb0854bbf3c2fd7f1a62a3c56f218633937076960930b66cb581cb8f8bf5531c7a3cd6c0#npm:7.0.1"],\
           ["eslint-plugin-react-refresh", "virtual:92d01c77b93de00ee522a67f45e19b429133990cbb6dbd9358d1aa88eb0854bbf3c2fd7f1a62a3c56f218633937076960930b66cb581cb8f8bf5531c7a3cd6c0#npm:0.5.2"],\
           ["globals", "npm:17.4.0"],\
-          ["my-react-app", "workspace:."],\
+          ["tiktaktoe-frontend", "workspace:."],\
           ["react", "npm:19.2.4"],\
           ["react-dom", "virtual:92d01c77b93de00ee522a67f45e19b429133990cbb6dbd9358d1aa88eb0854bbf3c2fd7f1a62a3c56f218633937076960930b66cb581cb8f8bf5531c7a3cd6c0#npm:19.2.4"],\
           ["typescript", "patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"],\
@@ -2243,7 +2243,7 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
-    ["my-react-app", [\
+    ["tiktaktoe-frontend", [\
       ["workspace:.", {\
         "packageLocation": "./",\
         "packageDependencies": [\
@@ -2256,7 +2256,7 @@ const RAW_RUNTIME_STATE =
           ["eslint-plugin-react-hooks", "virtual:92d01c77b93de00ee522a67f45e19b429133990cbb6dbd9358d1aa88eb0854bbf3c2fd7f1a62a3c56f218633937076960930b66cb581cb8f8bf5531c7a3cd6c0#npm:7.0.1"],\
           ["eslint-plugin-react-refresh", "virtual:92d01c77b93de00ee522a67f45e19b429133990cbb6dbd9358d1aa88eb0854bbf3c2fd7f1a62a3c56f218633937076960930b66cb581cb8f8bf5531c7a3cd6c0#npm:0.5.2"],\
           ["globals", "npm:17.4.0"],\
-          ["my-react-app", "workspace:."],\
+          ["tiktaktoe-frontend", "workspace:."],\
           ["react", "npm:19.2.4"],\
           ["react-dom", "virtual:92d01c77b93de00ee522a67f45e19b429133990cbb6dbd9358d1aa88eb0854bbf3c2fd7f1a62a3c56f218633937076960930b66cb581cb8f8bf5531c7a3cd6c0#npm:19.2.4"],\
           ["typescript", "patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"],\

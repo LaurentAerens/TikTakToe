@@ -1774,9 +1774,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"my-react-app@workspace:.":
+"tiktaktoe-frontend@workspace:.":
   version: 0.0.0-use.local
-  resolution: "my-react-app@workspace:."
+  resolution: "tiktaktoe-frontend@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.39.4"
     "@types/node": "npm:^24.12.0"
