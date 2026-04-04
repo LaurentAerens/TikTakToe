@@ -12,7 +12,6 @@ RUN corepack enable
 
 # Copy dependency manifests first for better layer caching
 COPY package.json yarn.lock ./
-COPY .yarn ./.yarn
 COPY .pnp.cjs ./
 COPY .pnp.loader.mjs ./
 
