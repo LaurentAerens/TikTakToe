@@ -32,6 +32,7 @@ jobs:
       project_name: TikTakToe
       project_path: src/backend/TikTakToe.slnx
       run_tests: true
+      skip_blackbox_tests: false
       is_pull_request: ${{ github.event_name == 'pull_request' }}
       pr_number: ${{ github.event.pull_request.number || '' }}
 
