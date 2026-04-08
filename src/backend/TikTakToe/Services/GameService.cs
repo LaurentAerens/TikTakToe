@@ -26,7 +26,17 @@ public sealed class GameService(GameDbContext dbContext, IGameBoardStore gameBoa
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var board = new int[rows, cols];
-        await gameBoardStore.SetBoardAsync(game.Id, board, cancellationToken);
+
+        try
+        {
+            await gameBoardStore.SetBoardAsync(game.Id, board, cancellationToken);
+        }
+        catch
+        {
+            dbContext.Games.Remove(game);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            throw;
+        }
         game.Board = board;
 
         return game;
