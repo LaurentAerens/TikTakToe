@@ -2,7 +2,6 @@ using TikTakToe.Endpoints;
 using TikTakToe.Data;
 using TikTakToe.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Scalar.AspNetCore;
 
@@ -14,8 +13,7 @@ builder.Services.AddSingleton<IExampleService, ExampleService>();
 var connectionString = DatabaseConnectionStringResolver.Resolve(builder.Configuration);
 
 builder.Services.AddDbContext<GameDbContext>(options =>
-	options.UseNpgsql(connectionString)
-		   .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning)));
+	options.UseNpgsql(connectionString));
 
 builder.Services.AddSingleton(sp =>
 {
