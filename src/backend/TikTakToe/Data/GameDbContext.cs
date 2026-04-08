@@ -32,6 +32,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         game.Property(x => x.Id).HasColumnName("id");
         game.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         game.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc");
+        game.Property<string>("BoardPersisted").HasColumnName("board");
 
         game.HasMany(x => x.Players)
             .WithOne(x => x.Game)
