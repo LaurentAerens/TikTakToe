@@ -14,7 +14,7 @@ public sealed class NpgsqlGameBoardStore(NpgsqlDataSource dataSource) : IGameBoa
         const string sql = """
             UPDATE games
             SET board = @board,
-                updated_at_utc = NOW() AT TIME ZONE 'UTC'
+                updated_at_utc = NOW()
             WHERE id = @id;
             """;
 
