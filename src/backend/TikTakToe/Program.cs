@@ -2,7 +2,6 @@ using TikTakToe.Endpoints;
 using TikTakToe.Data;
 using TikTakToe.Services;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,14 +13,6 @@ var connectionString = DatabaseConnectionStringResolver.Resolve(builder.Configur
 
 builder.Services.AddDbContext<GameDbContext>(options =>
 	options.UseNpgsql(connectionString));
-
-builder.Services.AddSingleton(sp =>
-{
-	var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-	return dataSourceBuilder.Build();
-});
-
-builder.Services.AddScoped<IGameBoardStore, NpgsqlGameBoardStore>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddOpenApi();
 

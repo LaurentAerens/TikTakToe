@@ -23,7 +23,7 @@ public static class GameEndpoints
             return Results.Created($"/games/{game.Id}", ApiResponse<GameDto>.Ok(ToDto(game)));
         })
         .WithName("CreateGame")
-        .WithSummary("Creates a new game with a rectangular board stored as a PostgreSQL array");
+        .WithSummary("Creates a new game with a rectangular board stored as jsonb");
 
         app.MapGet("/games/{id:guid}", async (Guid id, IGameService gameService, CancellationToken cancellationToken) =>
         {

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace TikTakToe.Models;
 
 /// <summary>
@@ -34,8 +32,7 @@ public sealed class GameModel
 
     /// <summary>
     /// Gets or sets the in-memory board as a rectangular array.
-    /// This property is handled via Npgsql and is not mapped by EF Core directly.
+    /// This property is persisted by EF Core to PostgreSQL jsonb.
     /// </summary>
-    [NotMapped]
     public int[,]? Board { get; set; }
 }

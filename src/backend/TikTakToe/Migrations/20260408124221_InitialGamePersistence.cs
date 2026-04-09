@@ -19,7 +19,7 @@ namespace TikTakToe.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     created_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    board = table.Column<int[]>(type: "integer[]", nullable: true)
+                    board = table.Column<string>(type: "jsonb", nullable: true)
                 },
                 constraints: table =>
                 {

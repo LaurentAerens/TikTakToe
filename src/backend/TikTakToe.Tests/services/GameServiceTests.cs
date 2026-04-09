@@ -10,8 +10,7 @@ public sealed class GameServiceTests
     public async Task CreateAsync_WithValidDimensions_PersistsGameAndBoard()
     {
         await using var dbContext = CreateDbContext();
-        var boardStore = new FakeBoardStore();
-        var service = new GameService(dbContext, boardStore);
+        var service = new GameService(dbContext);
 
         var game = await service.CreateAsync(3, 4);
 
@@ -22,19 +21,16 @@ public sealed class GameServiceTests
 
         var persistedGame = await dbContext.Games.SingleAsync(x => x.Id == game.Id);
         Assert.Equal(game.Id, persistedGame.Id);
-
-        var storedBoard = await boardStore.GetBoardAsync(game.Id);
-        Assert.NotNull(storedBoard);
-        Assert.Equal(3, storedBoard!.GetLength(0));
-        Assert.Equal(4, storedBoard.GetLength(1));
+        Assert.NotNull(persistedGame.Board);
+        Assert.Equal(3, persistedGame.Board!.GetLength(0));
+        Assert.Equal(4, persistedGame.Board.GetLength(1));
     }
 
     [Fact]
     public async Task CreateAsync_WithInvalidDimensions_ThrowsArgumentOutOfRangeException()
     {
         await using var dbContext = CreateDbContext();
-        var boardStore = new FakeBoardStore();
-        var service = new GameService(dbContext, boardStore);
+        var service = new GameService(dbContext);
 
         var invalidRowsException = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.CreateAsync(0, 3));
         Assert.Equal("rows", invalidRowsException.ParamName);
@@ -49,8 +45,7 @@ public sealed class GameServiceTests
     public async Task GetAsync_WhenGameExists_ReturnsGameWithBoard()
     {
         await using var dbContext = CreateDbContext();
-        var boardStore = new FakeBoardStore();
-        var service = new GameService(dbContext, boardStore);
+        var service = new GameService(dbContext);
 
         var createdGame = await service.CreateAsync(2, 2);
         var game = await service.GetAsync(createdGame.Id);
@@ -66,8 +61,7 @@ public sealed class GameServiceTests
     public async Task GetAsync_WhenGameMissing_ReturnsNull()
     {
         await using var dbContext = CreateDbContext();
-        var boardStore = new FakeBoardStore();
-        var service = new GameService(dbContext, boardStore);
+        var service = new GameService(dbContext);
 
         var game = await service.GetAsync(Guid.NewGuid());
 
@@ -81,22 +75,5 @@ public sealed class GameServiceTests
             .Options;
 
         return new GameDbContext(options);
-    }
-
-    private sealed class FakeBoardStore : IGameBoardStore
-    {
-        private readonly Dictionary<Guid, int[,]> boards = [];
-
-        public Task SetBoardAsync(Guid gameId, int[,] board, CancellationToken cancellationToken = default)
-        {
-            boards[gameId] = board;
-            return Task.CompletedTask;
-        }
-
-        public Task<int[,]?> GetBoardAsync(Guid gameId, CancellationToken cancellationToken = default)
-        {
-            boards.TryGetValue(gameId, out var board);
-            return Task.FromResult<int[,]?>(board);
-        }
     }
 }

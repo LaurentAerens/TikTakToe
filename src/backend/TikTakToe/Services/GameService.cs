@@ -7,7 +7,7 @@ namespace TikTakToe.Services;
 /// <summary>
 /// Default implementation for game persistence orchestration.
 /// </summary>
-public sealed class GameService(GameDbContext dbContext, IGameBoardStore gameBoardStore) : IGameService
+public sealed class GameService(GameDbContext dbContext) : IGameService
 {
     /// <inheritdoc />
     public async Task<GameModel> CreateAsync(int rows, int cols, CancellationToken cancellationToken = default)
@@ -22,13 +22,12 @@ public sealed class GameService(GameDbContext dbContext, IGameBoardStore gameBoa
             throw new ArgumentOutOfRangeException(nameof(cols), "Board dimensions must be greater than zero.");
         }
 
-        var game = new GameModel();
+        var game = new GameModel
+        {
+            Board = new int[rows, cols],
+        };
         dbContext.Games.Add(game);
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        var board = new int[rows, cols];
-        await gameBoardStore.SetBoardAsync(game.Id, board, cancellationToken);
-        game.Board = board;
 
         return game;
     }
@@ -45,8 +44,6 @@ public sealed class GameService(GameDbContext dbContext, IGameBoardStore gameBoa
         {
             return null;
         }
-
-        game.Board = await gameBoardStore.GetBoardAsync(game.Id, cancellationToken);
         return game;
     }
 }

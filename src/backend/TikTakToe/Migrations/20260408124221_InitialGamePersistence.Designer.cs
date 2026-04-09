@@ -40,8 +40,8 @@ namespace TikTakToe.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at_utc");
 
-                    b.Property<int[,]>("board")
-                        .HasColumnType("integer[]")
+                    b.Property<string>("board")
+                        .HasColumnType("jsonb")
                         .HasColumnName("board");
 
                     b.HasKey("Id");

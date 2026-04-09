@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Text.Json;
 using TikTakToe.Models;
 
 namespace TikTakToe.Data;
@@ -8,6 +11,15 @@ namespace TikTakToe.Data;
 /// </summary>
 public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbContext(options)
 {
+    private static readonly ValueConverter<int[,]?, string?> BoardConverter = new(
+        board => SerializeBoard(board),
+        payload => DeserializeBoard(payload));
+
+    private static readonly ValueComparer<int[,]?> BoardComparer = new(
+        (left, right) => BoardsEqual(left, right),
+        board => GetBoardHashCode(board),
+        board => CloneBoard(board));
+
     /// <summary>
     /// Gets or sets games.
     /// </summary>
@@ -32,11 +44,16 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         game.Property(x => x.Id).HasColumnName("id");
         game.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         game.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc");
+        var boardProperty = game.Property(x => x.Board)
+            .HasConversion(BoardConverter)
+            .Metadata;
+        boardProperty.SetValueComparer(BoardComparer);
+
+        game.Property(x => x.Board).HasColumnName("board");
         if (Database.IsNpgsql())
         {
-            game.Property<int[,]?>("board")
-                .HasColumnName("board")
-                .HasColumnType("integer[]");
+            game.Property(x => x.Board)
+                .HasColumnType("jsonb");
         }
 
         game.HasMany(x => x.Players)
@@ -70,5 +87,127 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         move.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         move.HasIndex(x => x.GameId);
         move.HasIndex(x => new { x.GameId, x.MoveNumber }).IsUnique();
+    }
+
+    private static string? SerializeBoard(int[,]? board)
+    {
+        if (board is null)
+        {
+            return null;
+        }
+
+        var rows = board.GetLength(0);
+        var cols = board.GetLength(1);
+        var serialized = new int[rows][];
+
+        for (var row = 0; row < rows; row++)
+        {
+            serialized[row] = new int[cols];
+            for (var col = 0; col < cols; col++)
+            {
+                serialized[row][col] = board[row, col];
+            }
+        }
+
+        return JsonSerializer.Serialize(serialized);
+    }
+
+    private static int[,]? DeserializeBoard(string? payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return null;
+        }
+
+        var serialized = JsonSerializer.Deserialize<int[][]>(payload)
+            ?? throw new InvalidOperationException("Board payload is missing.");
+
+        if (serialized.Length == 0)
+        {
+            return new int[0, 0];
+        }
+
+        var cols = serialized[0].Length;
+        for (var row = 1; row < serialized.Length; row++)
+        {
+            if (serialized[row].Length != cols)
+            {
+                throw new InvalidOperationException("Board payload must contain rectangular nested arrays.");
+            }
+        }
+
+        var board = new int[serialized.Length, cols];
+        for (var row = 0; row < serialized.Length; row++)
+        {
+            for (var col = 0; col < cols; col++)
+            {
+                board[row, col] = serialized[row][col];
+            }
+        }
+
+        return board;
+    }
+
+    private static int[,]? CloneBoard(int[,]? board)
+    {
+        if (board is null)
+        {
+            return null;
+        }
+
+        return (int[,])board.Clone();
+    }
+
+    private static bool BoardsEqual(int[,]? left, int[,]? right)
+    {
+        if (ReferenceEquals(left, right))
+        {
+            return true;
+        }
+
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
+        if (left.GetLength(0) != right.GetLength(0) || left.GetLength(1) != right.GetLength(1))
+        {
+            return false;
+        }
+
+        for (var row = 0; row < left.GetLength(0); row++)
+        {
+            for (var col = 0; col < left.GetLength(1); col++)
+            {
+                if (left[row, col] != right[row, col])
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static int GetBoardHashCode(int[,]? board)
+    {
+        if (board is null)
+        {
+            return 0;
+        }
+
+        var hash = new HashCode();
+        hash.Add(board.GetLength(0));
+        hash.Add(board.GetLength(1));
+
+        for (var row = 0; row < board.GetLength(0); row++)
+        {
+            for (var col = 0; col < board.GetLength(1); col++)
+            {
+                hash.Add(board[row, col]);
+            }
+        }
+
+        return hash.ToHashCode();
     }
 }
