@@ -68,7 +68,14 @@ docker compose up -d --build
 
 The API will be available at **http://localhost:8080**.
 
+The database explorer (pgweb) will be available at **http://localhost:8081** by default.
+It auto-connects to the local PostgreSQL container using `POSTGRES_PASSWORD` (or `changeme-dev-only`).
+
 If `POSTGRES_PASSWORD` is not set, Compose defaults to `changeme-dev-only` for local development.
+
+OpenAPI and Scalar documentation endpoints are exposed only in development or when `Features:ExposeApiDocs=true`.
+
+Development defaults are provided via `docker-compose.override.yml`, which Docker Compose applies automatically.
 
 The `frontend` compose service is currently a placeholder container until the frontend app and its Dockerfile are added.
 

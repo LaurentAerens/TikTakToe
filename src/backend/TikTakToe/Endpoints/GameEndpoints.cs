@@ -8,6 +8,8 @@ namespace TikTakToe.Endpoints;
 /// </summary>
 public static class GameEndpoints
 {
+    private const int _maxBoardDimension = 10_000;
+
     /// <summary>
     /// Maps game endpoints to the application.
     /// </summary>
@@ -18,6 +20,13 @@ public static class GameEndpoints
         {
             var rows = request.Rows <= 0 ? 3 : request.Rows;
             var cols = request.Cols <= 0 ? 3 : request.Cols;
+
+            if (rows > _maxBoardDimension || cols > _maxBoardDimension)
+            {
+                return Results.BadRequest(
+                    ApiResponse<GameDto>.Fail(
+                        $"Board dimensions must be less than or equal to {_maxBoardDimension}. Requested rows={rows}, cols={cols}."));
+            }
 
             var game = await gameService.CreateAsync(rows, cols, cancellationToken);
             return Results.Created($"/games/{game.Id}", ApiResponse<GameDto>.Ok(ToDto(game)));

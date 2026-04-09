@@ -17,6 +17,7 @@ builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+var exposeApiDocs = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Features:ExposeApiDocs");
 
 if (app.Environment.IsDevelopment())
 {
@@ -28,7 +29,10 @@ if (app.Environment.IsDevelopment())
 // Map endpoints
 app.MapHealthEndpoints();
 app.MapGameEndpoints();
-app.MapOpenApi();
-app.MapScalarApiReference();
+if (exposeApiDocs)
+{
+	app.MapOpenApi();
+	app.MapScalarApiReference();
+}
 
 app.Run();

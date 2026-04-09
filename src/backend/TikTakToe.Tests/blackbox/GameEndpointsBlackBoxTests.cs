@@ -49,4 +49,22 @@ public sealed class GameEndpointsBlackBoxTests(BlackBoxComposeFixture fixture)
             Assert.Equal(5, row.GetArrayLength());
         }
     }
+
+    [BlackBoxFact]
+    public async Task CreateGame_WithTooLargeDimensions_ReturnsBadRequest()
+    {
+        using var client = new HttpClient { BaseAddress = fixture.BaseAddress };
+
+        var createPayload = new { rows = 10001, cols = 3 };
+        using var createResponse = await client.PostAsJsonAsync("/games", createPayload);
+
+        Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+
+        await using var stream = await createResponse.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(stream);
+        var root = document.RootElement;
+
+        Assert.False(root.GetProperty("success").GetBoolean());
+        Assert.Contains("less than or equal to 10000", root.GetProperty("error").GetString());
+    }
 }
