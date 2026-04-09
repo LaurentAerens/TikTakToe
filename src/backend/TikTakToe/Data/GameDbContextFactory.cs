@@ -37,13 +37,13 @@ public sealed class GameDbContextFactory : IDesignTimeDbContextFactory<GameDbCon
             AppContext.BaseDirectory,
         };
 
-        foreach (var root in candidateRoots)
+        var resolvedRoot = candidateRoots
+            .Select(FindContentRoot)
+            .FirstOrDefault(path => path is not null);
+
+        if (resolvedRoot is not null)
         {
-            var resolved = FindContentRoot(root);
-            if (resolved is not null)
-            {
-                return resolved;
-            }
+            return resolvedRoot;
         }
 
         return Directory.GetCurrentDirectory();
@@ -55,10 +55,10 @@ public sealed class GameDbContextFactory : IDesignTimeDbContextFactory<GameDbCon
 
         while (current is not null)
         {
-            var appSettingsPath = Path.Combine(current.FullName, "appsettings.json");
-            var projectPath = Path.Combine(current.FullName, "TikTakToe.csproj");
+            var hasAppSettings = current.GetFiles("appsettings.json", SearchOption.TopDirectoryOnly).Length > 0;
+            var hasProjectFile = current.GetFiles("TikTakToe.csproj", SearchOption.TopDirectoryOnly).Length > 0;
 
-            if (File.Exists(appSettingsPath) && File.Exists(projectPath))
+            if (hasAppSettings && hasProjectFile)
             {
                 return current.FullName;
             }
