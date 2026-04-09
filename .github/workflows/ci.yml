@@ -54,15 +54,17 @@ jobs:
         run: dotnet tool update --global dotnet-ef --version "10.*"
 
       - name: Restore backend project
-        run: dotnet restore src/backend/TikTakToe/TikTakToe.csproj
+        working-directory: src/backend/TikTakToe
+        run: dotnet restore TikTakToe.csproj
 
       - name: Verify EF model matches migrations
+        working-directory: src/backend/TikTakToe
         env:
           PATH: ${{ env.PATH }}:${{ runner.tool_cache }}/.dotnet/tools:/home/runner/.dotnet/tools
         run: |
           dotnet ef migrations has-pending-model-changes \
-            --project src/backend/TikTakToe/TikTakToe.csproj \
-            --startup-project src/backend/TikTakToe/TikTakToe.csproj \
+            --project TikTakToe.csproj \
+            --startup-project TikTakToe.csproj \
             --context GameDbContext
 
   quality-gates:
