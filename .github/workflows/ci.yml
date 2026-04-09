@@ -53,6 +53,9 @@ jobs:
       - name: Install dotnet-ef
         run: dotnet tool update --global dotnet-ef --version "10.*"
 
+      - name: Restore backend project
+        run: dotnet restore src/backend/TikTakToe/TikTakToe.csproj
+
       - name: Verify EF model matches migrations
         env:
           PATH: ${{ env.PATH }}:${{ runner.tool_cache }}/.dotnet/tools:/home/runner/.dotnet/tools
