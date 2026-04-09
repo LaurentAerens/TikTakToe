@@ -12,9 +12,14 @@ public sealed class GameService(GameDbContext dbContext, IGameBoardStore gameBoa
     /// <inheritdoc />
     public async Task<GameModel> CreateAsync(int rows, int cols, CancellationToken cancellationToken = default)
     {
-        if (rows <= 0 || cols <= 0)
+        if (rows <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(rows), "Board dimensions must be greater than zero.");
+        }
+
+        if (cols <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(cols), "Board dimensions must be greater than zero.");
         }
 
         var game = new GameModel();

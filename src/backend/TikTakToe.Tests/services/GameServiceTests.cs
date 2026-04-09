@@ -36,8 +36,12 @@ public sealed class GameServiceTests
         var boardStore = new FakeBoardStore();
         var service = new GameService(dbContext, boardStore);
 
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.CreateAsync(0, 3));
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.CreateAsync(3, 0));
+        var invalidRowsException = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.CreateAsync(0, 3));
+        Assert.Equal("rows", invalidRowsException.ParamName);
+
+        var invalidColsException = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.CreateAsync(3, 0));
+        Assert.Equal("cols", invalidColsException.ParamName);
+
         Assert.Empty(dbContext.Games);
     }
 

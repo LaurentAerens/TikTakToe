@@ -25,6 +25,7 @@ services:
       - PGPORT=5432
       - PGDATABASE=tiktaktoe
       - PGUSER=app_user
+      - PGPASSWORD=${POSTGRES_PASSWORD:-changeme-dev-only}
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,7 +39,7 @@ services:
     environment:
       - POSTGRES_DB=tiktaktoe
       - POSTGRES_USER=app_user
-      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme-dev-only}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:

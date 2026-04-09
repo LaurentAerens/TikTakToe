@@ -37,7 +37,7 @@ namespace TikTakToe.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at_utc");
 
-                    b.PrimitiveCollection<int[]>("board")
+                    b.Property<int[,]>("board")
                         .HasColumnType("integer[]")
                         .HasColumnName("board");
 

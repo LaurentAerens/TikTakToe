@@ -62,10 +62,13 @@ dotnet run --project TikTakToe
 ### With Docker Compose
 
 ```bash
+export POSTGRES_PASSWORD=replace-with-a-strong-dev-password
 docker compose up -d --build
 ```
 
 The API will be available at **http://localhost:8080**.
+
+If `POSTGRES_PASSWORD` is not set, Compose defaults to `changeme-dev-only` for local development.
 
 The `frontend` compose service is currently a placeholder container until the frontend app and its Dockerfile are added.
 
