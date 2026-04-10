@@ -1,4 +1,4 @@
-using TikTakToe.Endpoints;
+using TikTakToe.Controllers;
 using TikTakToe.Data;
 using TikTakToe.Services;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +8,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Register services
 builder.Services.AddSingleton<IExampleService, ExampleService>();
+builder.Services.AddOptions<DatabaseConnectionOptions>()
+	.Configure<IConfiguration>((options, configuration) =>
+	{
+		var configuredOptions = DatabaseConnectionOptions.FromConfiguration(configuration);
+		options.DefaultConnection = configuredOptions.DefaultConnection;
+		options.Host = configuredOptions.Host;
+		options.Database = configuredOptions.Database;
+		options.Username = configuredOptions.Username;
+		options.Password = configuredOptions.Password;
+		options.Port = configuredOptions.Port;
+	});
+builder.Services.AddSingleton<IDatabaseConnectionStringResolver, DatabaseConnectionStringResolver>();
 
-var connectionString = DatabaseConnectionStringResolver.Resolve(builder.Configuration);
-
-builder.Services.AddDbContext<GameDbContext>(options =>
-	options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<GameDbContext>((serviceProvider, options) =>
+{
+	var connectionStringResolver = serviceProvider.GetRequiredService<IDatabaseConnectionStringResolver>();
+	options.UseNpgsql(connectionStringResolver.Resolve());
+});
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddOpenApi();
 
@@ -27,8 +40,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Map endpoints
-app.MapHealthEndpoints();
-app.MapGameEndpoints();
+app.MapHealthController();
+app.MapGameController();
 if (exposeApiDocs)
 {
 	app.MapOpenApi();

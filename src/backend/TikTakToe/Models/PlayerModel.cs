@@ -8,7 +8,7 @@ public sealed class PlayerModel
     /// <summary>
     /// Gets or sets the primary identifier.
     /// </summary>
-    public long Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     /// <summary>
     /// Gets or sets the related game identifier.

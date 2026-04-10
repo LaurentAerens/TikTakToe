@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -30,14 +29,13 @@ namespace TikTakToe.Migrations
                 name: "moves",
                 columns: table => new
                 {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     game_id = table.Column<Guid>(type: "uuid", nullable: false),
                     x = table.Column<int>(type: "integer", nullable: false),
                     y = table.Column<int>(type: "integer", nullable: false),
                     value = table.Column<int>(type: "integer", nullable: false),
-                    move_number = table.Column<int>(type: "integer", nullable: false),
-                    created_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    MoveNumber = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -54,8 +52,7 @@ namespace TikTakToe.Migrations
                 name: "players",
                 columns: table => new
                 {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     game_id = table.Column<Guid>(type: "uuid", nullable: false),
                     is_engine = table.Column<bool>(type: "boolean", nullable: false),
                     external_id = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true)
@@ -77,9 +74,9 @@ namespace TikTakToe.Migrations
                 column: "game_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_moves_game_id_move_number",
+                name: "IX_moves_game_id_MoveNumber",
                 table: "moves",
-                columns: new[] { "game_id", "move_number" },
+                columns: new[] { "game_id", "MoveNumber" },
                 unique: true);
 
             migrationBuilder.CreateIndex(

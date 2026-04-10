@@ -1,20 +1,20 @@
 using TikTakToe.Models;
 using TikTakToe.Services;
 
-namespace TikTakToe.Endpoints;
+namespace TikTakToe.Controllers;
 
 /// <summary>
-/// Endpoints for game persistence operations.
+/// Controller mappings for game persistence operations.
 /// </summary>
-public static class GameEndpoints
+public static class GameController
 {
     private const int _maxBoardDimension = 10_000;
 
     /// <summary>
-    /// Maps game endpoints to the application.
+    /// Maps game controller routes to the application.
     /// </summary>
     /// <param name="app">The web application.</param>
-    public static void MapGameEndpoints(this WebApplication app)
+    public static void MapGameController(this WebApplication app)
     {
         app.MapPost("/games", async (CreateGameRequest request, IGameService gameService, CancellationToken cancellationToken) =>
         {
@@ -82,6 +82,6 @@ public static class GameEndpoints
 
     private sealed record CreateGameRequest(int Rows = 3, int Cols = 3);
     private sealed record GameDto(Guid Id, int[][] Board, PlayerDto[] Players, MoveDto[] Moves);
-    private sealed record PlayerDto(long Id, bool IsEngine, string? ExternalId);
-    private sealed record MoveDto(long Id, int X, int Y, int Value, int MoveNumber);
+    private sealed record PlayerDto(Guid Id, bool IsEngine, string? ExternalId);
+    private sealed record MoveDto(Guid Id, int X, int Y, int Value, int MoveNumber);
 }

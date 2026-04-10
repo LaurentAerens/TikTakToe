@@ -1,17 +1,17 @@
 using System.Reflection;
 
-namespace TikTakToe.Endpoints;
+namespace TikTakToe.Controllers;
 
 /// <summary>
-/// Health and version check endpoints.
+/// Health and version controller mappings.
 /// </summary>
-public static class HealthEndpoints
+public static class HealthController
 {
     /// <summary>
-    /// Maps the health and version endpoints to the application.
+    /// Maps the health and version controller routes to the application.
     /// </summary>
     /// <param name="app">The web application.</param>
-    public static void MapHealthEndpoints(this WebApplication app)
+    public static void MapHealthController(this WebApplication app)
     {
         app.MapGet("/healthz", () => Results.Ok(new { status = "healthy" }))
            .WithName("Health")

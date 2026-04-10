@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace TikTakToe.Data;
 
@@ -15,14 +16,23 @@ public sealed class GameDbContextFactory : IDesignTimeDbContextFactory<GameDbCon
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
         var basePath = ResolveContentRoot();
 
-        var configuration = new ConfigurationBuilder()
+        var configurationBuilder = new ConfigurationBuilder()
             .SetBasePath(basePath)
             .AddJsonFile("appsettings.json", optional: true)
-            .AddJsonFile($"appsettings.{environment}.json", optional: true)
+            .AddJsonFile($"appsettings.{environment}.json", optional: true);
+
+        if (string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase))
+        {
+            configurationBuilder.AddUserSecrets<GameDbContextFactory>(optional: true);
+        }
+
+        var configuration = configurationBuilder
             .AddEnvironmentVariables()
             .Build();
 
-        var connectionString = DatabaseConnectionStringResolver.Resolve(configuration);
+        var databaseOptions = DatabaseConnectionOptions.FromConfiguration(configuration);
+        var resolver = new DatabaseConnectionStringResolver(Options.Create(databaseOptions));
+        var connectionString = resolver.Resolve();
 
         var optionsBuilder = new DbContextOptionsBuilder<GameDbContext>();
         optionsBuilder.UseNpgsql(connectionString);

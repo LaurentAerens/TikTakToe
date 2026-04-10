@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace TikTakToe.Data;
@@ -6,25 +6,21 @@ namespace TikTakToe.Data;
 /// <summary>
 /// Resolves PostgreSQL connection details from application configuration.
 /// </summary>
-public static class DatabaseConnectionStringResolver
+public sealed class DatabaseConnectionStringResolver(IOptions<DatabaseConnectionOptions> options) : IDatabaseConnectionStringResolver
 {
     /// <summary>
-    /// Resolves the connection string using either ConnectionStrings:DefaultConnection
-    /// or PG* environment settings.
+    /// Resolves the connection string using either PG* settings or ConnectionStrings:DefaultConnection.
     /// </summary>
-    /// <param name="configuration">Application configuration.</param>
     /// <returns>A PostgreSQL connection string.</returns>
-    public static string Resolve(IConfiguration configuration)
+    public string Resolve()
     {
-        var host = configuration["PGHOST"];
-        var database = configuration["PGDATABASE"];
-        var username = configuration["PGUSER"];
+        var configuredOptions = options.Value;
+        var host = configuredOptions.Host;
+        var database = configuredOptions.Database;
+        var username = configuredOptions.Username;
 
         if (!string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(database) && !string.IsNullOrWhiteSpace(username))
         {
-            var portText = configuration["PGPORT"];
-            var password = configuration["PGPASSWORD"];
-
             var envBuilder = new NpgsqlConnectionStringBuilder
             {
                 Host = host,
@@ -32,20 +28,20 @@ public static class DatabaseConnectionStringResolver
                 Username = username,
             };
 
-            if (int.TryParse(portText, out var parsedPort) && parsedPort > 0)
+            if (configuredOptions.Port is > 0)
             {
-                envBuilder.Port = parsedPort;
+                envBuilder.Port = configuredOptions.Port.Value;
             }
 
-            if (!string.IsNullOrWhiteSpace(password))
+            if (!string.IsNullOrWhiteSpace(configuredOptions.Password))
             {
-                envBuilder.Password = password;
+                envBuilder.Password = configuredOptions.Password;
             }
 
             return envBuilder.ToString();
         }
 
-        var directConnection = configuration.GetConnectionString("DefaultConnection");
+        var directConnection = configuredOptions.DefaultConnection;
         if (!string.IsNullOrWhiteSpace(directConnection))
         {
             return directConnection;

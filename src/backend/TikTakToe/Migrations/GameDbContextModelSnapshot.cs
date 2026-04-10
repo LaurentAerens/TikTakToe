@@ -29,6 +29,10 @@ namespace TikTakToe.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Board")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("board");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at_utc");
@@ -37,10 +41,6 @@ namespace TikTakToe.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at_utc");
 
-                    b.Property<string>("board")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("board");
-
                     b.HasKey("Id");
 
                     b.ToTable("games", (string)null);
@@ -48,24 +48,20 @@ namespace TikTakToe.Migrations
 
             modelBuilder.Entity("TikTakToe.Models.MoveModel", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at_utc");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("GameId")
                         .HasColumnType("uuid")
                         .HasColumnName("game_id");
 
                     b.Property<int>("MoveNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("move_number");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Value")
                         .HasColumnType("integer")
@@ -91,12 +87,10 @@ namespace TikTakToe.Migrations
 
             modelBuilder.Entity("TikTakToe.Models.PlayerModel", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("ExternalId")
                         .HasMaxLength(128)
