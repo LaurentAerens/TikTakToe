@@ -83,8 +83,8 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         move.Property(x => x.X).HasColumnName("x");
         move.Property(x => x.Y).HasColumnName("y");
         move.Property(x => x.Value).HasColumnName("value");
-        move.Property(x => x.MoveNumber);
-        move.Property(x => x.CreatedAtUtc);
+        move.Property(x => x.MoveNumber).HasColumnName("move_number");
+        move.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         move.HasIndex(x => x.GameId);
         move.HasIndex(x => new { x.GameId, x.MoveNumber }).IsUnique();
     }
