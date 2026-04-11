@@ -38,8 +38,8 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
     │       └── engines/            # Engine contract & behaviour tests
     └── frontend/                   # Frontend workspace
         ├── src/                    # Code folder
-            ├── main.tsx            # Images
-            └── main.tsx            # Entry point
+        │   ├── assets/             # Images
+        │   └── main.tsx            # Entry point
 ```
 
 ---
