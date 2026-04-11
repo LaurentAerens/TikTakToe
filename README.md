@@ -113,7 +113,7 @@ Frontend will be avalible on **http://localhost:3000**.
 ```bash
 cd src/frontend
 docker build -t tiktaktoe-frontend -f Dockerfile .
-docker run -p 3000:3000 tiktaktoe-frontend
+docker run -p 3000:80 tiktaktoe-frontend
 ```
 
 ---
