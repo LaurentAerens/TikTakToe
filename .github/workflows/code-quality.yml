@@ -27,7 +27,7 @@ jobs:
 
     strategy:
       matrix:
-        language: [ 'csharp' ]
+        language: [ 'csharp', 'javascript' ]
       fail-fast: false
 
     steps:
@@ -42,20 +42,23 @@ jobs:
           config-file: .github/codeql-config.yml
 
       - name: Setup .NET
+        if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
+        if: matrix.language == 'csharp'
         run: dotnet restore src/backend/TikTakToe.slnx
 
       - name: Build for CodeQL
+        if: matrix.language == 'csharp'
         run: dotnet build --no-restore src/backend/TikTakToe.slnx -c Release
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:csharp"
+          category: "/language:${{ matrix.language }}"
 
   semgrep:
     name: Semgrep Analysis

@@ -14,3 +14,7 @@ paths-ignore:
   # Exclude build artifacts
   - '**/bin/**'
   - '**/obj/**'
+
+  # Exclude frontend dependencies
+  - '**/node_modules/**'
+  - '**/dist/**'
