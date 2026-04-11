@@ -13,12 +13,11 @@ dist-ssr
 *.local
 
 # Yarn Berry transient files (do not commit)
-.pnp.cjs
-.pnp.loader.mjs
 .yarn/install-state.gz
 .yarn/unplugged/
 .yarn/build-state.yml
 .yarn/cache/
+.pnp.*
 
 # Editor directories and files
 .vscode/*
