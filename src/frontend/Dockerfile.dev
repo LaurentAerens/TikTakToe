@@ -7,16 +7,12 @@ FROM node:${NODE_VERSION} AS dev
  
 # Set working directory inside the container
 WORKDIR /app
-
-# Use the Yarn version expected by the repo
-RUN corepack enable
  
 # Copy package files
-COPY package.json yarn.lock ./
+COPY package*.json yarn.lock ./
  
-# Install dependencies
-RUN --mount=type=cache,target=/root/.yarn/berry/cache \
-	yarn install --immutable
+# Install dependencies using the checked-in lockfile for reproducibility
+RUN yarn install --immutable
  
 # Copy rest of the source code
 COPY . .
