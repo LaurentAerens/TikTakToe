@@ -82,7 +82,7 @@ cd src/frontend
 docker compose up dev --watch
 ```
 
-Frontend will be avalible on **http://localhost:5173**.
+Frontend will be available on **http://localhost:5173**.
 
 ##### Using Yarn
 
