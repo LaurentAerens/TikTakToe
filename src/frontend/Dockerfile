@@ -12,8 +12,6 @@ RUN corepack enable
 
 # Copy dependency manifests first for better layer caching
 COPY package.json yarn.lock ./
-COPY .pnp.cjs ./
-COPY .pnp.loader.mjs ./
 
 # Reproducible install for Yarn Berry
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
