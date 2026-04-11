@@ -68,6 +68,7 @@ dotnet run --project TikTakToe
 #### With Docker Compose
 
 ```bash
+export POSTGRES_PASSWORD=replace-with-a-strong-dev-password
 docker compose up -d --build
 ```
 
