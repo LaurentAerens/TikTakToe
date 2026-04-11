@@ -1774,27 +1774,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tiktaktoe-frontend@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "tiktaktoe-frontend@workspace:."
-  dependencies:
-    "@eslint/js": "npm:^9.39.4"
-    "@types/node": "npm:^24.12.0"
-    "@types/react": "npm:^19.2.14"
-    "@types/react-dom": "npm:^19.2.3"
-    "@vitejs/plugin-react": "npm:^6.0.1"
-    eslint: "npm:^9.39.4"
-    eslint-plugin-react-hooks: "npm:^7.0.1"
-    eslint-plugin-react-refresh: "npm:^0.5.2"
-    globals: "npm:^17.4.0"
-    react: "npm:^19.2.4"
-    react-dom: "npm:^19.2.4"
-    typescript: "npm:~5.9.3"
-    typescript-eslint: "npm:^8.57.0"
-    vite: "npm:^8.0.1"
-  languageName: unknown
-  linkType: soft
-
 "nanoid@npm:^3.3.11":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
@@ -2177,6 +2156,27 @@ __metadata:
   checksum: 10c0/5c65b8084799bde7a791593a1c1a45d3d6ee98182e3700b24c247b7b8f8654df4191642abbdb07ff25043d45dcff35620827c3997b88ae6c12040f64bed5076b
   languageName: node
   linkType: hard
+
+"tiktaktoe-frontend@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "tiktaktoe-frontend@workspace:."
+  dependencies:
+    "@eslint/js": "npm:^9.39.4"
+    "@types/node": "npm:^24.12.0"
+    "@types/react": "npm:^19.2.14"
+    "@types/react-dom": "npm:^19.2.3"
+    "@vitejs/plugin-react": "npm:^6.0.1"
+    eslint: "npm:^9.39.4"
+    eslint-plugin-react-hooks: "npm:^7.0.1"
+    eslint-plugin-react-refresh: "npm:^0.5.2"
+    globals: "npm:^17.4.0"
+    react: "npm:^19.2.4"
+    react-dom: "npm:^19.2.4"
+    typescript: "npm:~5.9.3"
+    typescript-eslint: "npm:^8.57.0"
+    vite: "npm:^8.0.1"
+  languageName: unknown
+  linkType: soft
 
 "tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.15":
   version: 0.2.15
