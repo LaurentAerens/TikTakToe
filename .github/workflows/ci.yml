@@ -32,13 +32,45 @@ jobs:
       project_name: TikTakToe
       project_path: src/backend/TikTakToe.slnx
       run_tests: true
+      skip_blackbox_tests: false
       is_pull_request: ${{ github.event_name == 'pull_request' }}
       pr_number: ${{ github.event.pull_request.number || '' }}
+
+  ef-model-drift-check:
+    name: EF Model Drift Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install dotnet-ef
+        run: dotnet tool update --global dotnet-ef --version "10.*"
+
+      - name: Restore backend project
+        working-directory: src/backend/TikTakToe
+        run: dotnet restore TikTakToe.csproj
+
+      - name: Verify EF model matches migrations
+        working-directory: src/backend/TikTakToe
+        env:
+          PATH: ${{ env.PATH }}:${{ runner.tool_cache }}/.dotnet/tools:/home/runner/.dotnet/tools
+        run: |
+          dotnet ef migrations has-pending-model-changes \
+            --project TikTakToe.csproj \
+            --startup-project TikTakToe.csproj \
+            --context GameDbContext
 
   quality-gates:
     name: Quality Gates Summary
     runs-on: ubuntu-latest
-    needs: [build-and-test]
+    needs: [build-and-test, ef-model-drift-check]
     if: always()
     permissions:
       contents: read
@@ -48,9 +80,15 @@ jobs:
         run: |
           echo "## Build & Tests Status"
           echo "Build and tests: ${{ needs.build-and-test.result }}"
+          echo "EF model drift check: ${{ needs.ef-model-drift-check.result }}"
 
-          if [[ "${{ needs.build-and-test.result }}" == "failure" ]]; then
-            echo "❌ Build or tests failed"
+          if [[ "${{ needs.build-and-test.result }}" != "success" ]]; then
+            echo "❌ Build or tests did not succeed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.ef-model-drift-check.result }}" != "success" ]]; then
+            echo "❌ EF model drift check did not succeed"
             exit 1
           fi
 

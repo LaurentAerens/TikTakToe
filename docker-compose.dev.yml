@@ -1,0 +1,5 @@
+services:
+  backend:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FEATURES__EXPOSEAPIDOCS=true

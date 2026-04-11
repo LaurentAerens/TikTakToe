@@ -16,6 +16,11 @@ on:
         type: boolean
         default: true
         description: "Flag to run or skip tests"
+      skip_blackbox_tests:
+        required: false
+        type: boolean
+        default: false
+        description: "Skip docker black-box tests (opt-out)"
       is_pull_request:
         required: false
         type: boolean
@@ -62,6 +67,8 @@ jobs:
 
       - name: Run Tests
         if: ${{ inputs.run_tests }}
+        env:
+          SKIP_BLACKBOX_TESTS: ${{ inputs.skip_blackbox_tests && 'true' || 'false' }}
         run: |
           dotnet test "${{ inputs.project_path }}" \
             --configuration Release \

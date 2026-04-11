@@ -1,0 +1,25 @@
+services:
+  backend:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FEATURES__EXPOSEAPIDOCS=true
+
+  db-explorer:
+    image: sosedoff/pgweb:latest
+    container_name: tiktaktoe-db-explorer
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://app_user:${POSTGRES_PASSWORD:-changeme-dev-only}@postgres:5432/tiktaktoe?sslmode=disable
+    command:
+      - /usr/bin/pgweb
+      - --bind=0.0.0.0
+      - --listen=8081
+      - --url=postgres://app_user:${POSTGRES_PASSWORD:-changeme-dev-only}@postgres:5432/tiktaktoe?sslmode=disable
+      - --skip-open
+    ports:
+      - "${DB_EXPLORER_PORT:-8081}:8081"
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
