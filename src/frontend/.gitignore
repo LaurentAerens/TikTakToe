@@ -13,10 +13,7 @@ dist-ssr
 *.local
 
 # Yarn Berry transient files (do not commit)
-.yarn/install-state.gz
-.yarn/unplugged/
-.yarn/build-state.yml
-.yarn/cache/
+.yarn/
 .pnp.*
 
 # Editor directories and files
