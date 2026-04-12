@@ -35,6 +35,11 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
     /// </summary>
     public DbSet<MoveModel> Moves => Set<MoveModel>();
 
+    /// <summary>
+    /// Gets or sets engine capabilities.
+    /// </summary>
+    public DbSet<EngineCapabilityModel> EngineCapabilities => Set<EngineCapabilityModel>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +92,16 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         move.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
         move.HasIndex(x => x.GameId);
         move.HasIndex(x => new { x.GameId, x.MoveNumber }).IsUnique();
+
+        var engineCapability = modelBuilder.Entity<EngineCapabilityModel>();
+        engineCapability.ToTable("engine_capabilities");
+        engineCapability.HasKey(x => x.Id);
+        engineCapability.Property(x => x.Id).HasColumnName("id");
+        engineCapability.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(128);
+        engineCapability.Property(x => x.MaxBoardSizeX).HasColumnName("max_board_size_x");
+        engineCapability.Property(x => x.MaxBoardSizeY).HasColumnName("max_board_size_y");
+        engineCapability.Property(x => x.Depth).HasColumnName("depth");
+        engineCapability.HasIndex(x => x.DisplayName).IsUnique();
     }
 
     private static string? SerializeBoard(int[,]? board)
