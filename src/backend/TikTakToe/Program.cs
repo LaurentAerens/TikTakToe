@@ -37,6 +37,10 @@ if (app.Environment.IsDevelopment())
 	using var scope = app.Services.CreateScope();
 	var dbContext = scope.ServiceProvider.GetRequiredService<GameDbContext>();
 	dbContext.Database.Migrate();
+}
+
+using (var scope = app.Services.CreateScope())
+{
 	var engineLookupProvider = scope.ServiceProvider.GetRequiredService<IEngineLookupProvider>();
 	await engineLookupProvider.EnsureCapabilitiesAsync();
 }

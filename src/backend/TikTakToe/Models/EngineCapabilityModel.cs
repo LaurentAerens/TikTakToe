@@ -16,6 +16,11 @@ public sealed class EngineCapabilityModel
     public required string DisplayName { get; set; }
 
     /// <summary>
+    /// Gets or sets the normalized display name used for uniqueness checks.
+    /// </summary>
+    public string? NormalizedDisplayName { get; set; }
+
+    /// <summary>
     /// Gets or sets the maximum supported board size on the X-axis.
     /// </summary>
     public int MaxBoardSizeX { get; set; }

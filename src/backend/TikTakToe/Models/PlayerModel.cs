@@ -13,7 +13,7 @@ public sealed class PlayerModel
     /// <summary>
     /// Gets or sets the related game identifier.
     /// </summary>
-    public Guid GameId { get; set; }
+    public Guid? GameId { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether this player is controlled by an engine.
@@ -28,5 +28,5 @@ public sealed class PlayerModel
     /// <summary>
     /// Gets or sets the related game.
     /// </summary>
-    public GameModel Game { get; set; } = null!;
+    public GameModel? Game { get; set; }
 }
