@@ -177,7 +177,7 @@ jobs:
 
       - name: Add Test Results Comment
         if: ${{ inputs.run_tests && inputs.is_pull_request && inputs.pr_number != '' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           PR_NUMBER: ${{ inputs.pr_number }}
           PROJECT_NAME: ${{ inputs.project_name }}
@@ -237,7 +237,7 @@ jobs:
 
       - name: Add Coverage Comment
         if: ${{ inputs.run_tests && inputs.is_pull_request && inputs.pr_number != '' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           COVERAGE_PERCENT: ${{ steps.coverage.outputs.COVERAGE_PERCENT }}
           GITHUB_REPO: ${{ github.repository }}
