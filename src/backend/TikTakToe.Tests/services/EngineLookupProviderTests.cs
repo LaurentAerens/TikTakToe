@@ -19,14 +19,14 @@ public sealed class EngineLookupProviderTests
         Assert.Equal(5, capabilities.Count);
         Assert.Contains(capabilities, x => x.DisplayName == "Classical" && x.Depth);
         Assert.Contains(capabilities, x => x.DisplayName == "Random" && !x.Depth);
-        Assert.All(capabilities, x => Assert.NotEqual(Guid.Empty, x.EngineId));
+        Assert.All(capabilities, x => Assert.NotEqual(Guid.Empty, x.Id));
         Assert.All(capabilities, x => Assert.NotEqual(Guid.Empty, x.PlayerId));
 
         var enginePlayers = await dbContext.Players.Where(x => x.IsEngine).ToListAsync();
         Assert.Equal(capabilities.Count, enginePlayers.Count);
         foreach (var capability in capabilities)
         {
-            Assert.Contains(enginePlayers, p => p.Id == capability.PlayerId && p.ExternalId == capability.EngineId.ToString("D"));
+            Assert.Contains(enginePlayers, p => p.Id == capability.PlayerId && p.ExternalId == capability.Id.ToString("D"));
         }
     }
 
@@ -40,17 +40,17 @@ public sealed class EngineLookupProviderTests
         var halfDepth = await provider.GetByDisplayNameAsync("Half Depth");
         Assert.NotNull(halfDepth);
 
-        var byId = await provider.GetByIdAsync(halfDepth!.EngineId);
+        var byId = await provider.GetByIdAsync(halfDepth!.Id);
         Assert.NotNull(byId);
 
         var byDisplayName = await provider.GetByDisplayNameAsync(byId!.DisplayName);
         Assert.NotNull(byDisplayName);
-        Assert.Equal(byId.EngineId, byDisplayName!.EngineId);
+        Assert.Equal(byId.Id, byDisplayName!.Id);
         Assert.Equal(byId.PlayerId, byDisplayName.PlayerId);
 
         var byPlayerId = await provider.GetByPlayerIdAsync(byId.PlayerId);
         Assert.NotNull(byPlayerId);
-        Assert.Equal(byId.EngineId, byPlayerId!.EngineId);
+        Assert.Equal(byId.Id, byPlayerId!.Id);
     }
 
     [Theory]
@@ -69,7 +69,7 @@ public sealed class EngineLookupProviderTests
 
         Assert.NotNull(canonical);
         Assert.NotNull(variant);
-        Assert.Equal(canonical!.EngineId, variant!.EngineId);
+        Assert.Equal(canonical!.Id, variant!.Id);
         Assert.Equal(canonical.PlayerId, variant.PlayerId);
     }
 
@@ -83,7 +83,7 @@ public sealed class EngineLookupProviderTests
         var oppertunity = await provider.GetByDisplayNameAsync("Oppertunity");
         Assert.NotNull(oppertunity);
 
-        var engine = await provider.CreateEngineByIdAsync(oppertunity!.EngineId);
+        var engine = await provider.CreateEngineByIdAsync(oppertunity!.Id);
         Assert.NotNull(engine);
         Assert.Equal("OppertunityEngine", engine!.GetType().Name);
 

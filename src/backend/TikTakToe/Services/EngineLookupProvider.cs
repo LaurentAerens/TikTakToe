@@ -120,7 +120,15 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
             return null;
         }
 
-        return byEngineId with { PlayerId = player.Id };
+        return new EngineCapabilityWithPlayerModel
+        {
+            Id = byEngineId.Id,
+            PlayerId = player.Id,
+            DisplayName = byEngineId.DisplayName,
+            MaxBoardSizeX = byEngineId.MaxBoardSizeX,
+            MaxBoardSizeY = byEngineId.MaxBoardSizeY,
+            Depth = byEngineId.Depth,
+        };
     }
 
     public async Task<EngineCapabilityWithPlayerModel?> GetByDisplayNameAsync(string displayName, CancellationToken cancellationToken = default)
@@ -162,15 +170,8 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
             return null;
         }
 
-        return await CreateEngineByIdAsync(capability.EngineId, cancellationToken);
+        return await CreateEngineByIdAsync(capability.Id, cancellationToken);
     }
-
-    private sealed record EngineRegistration(
-        string DisplayName,
-        int MaxBoardSizeX,
-        int MaxBoardSizeY,
-        bool Depth,
-        Func<IEngine> Factory);
 
     private static void ValidateUniqueRegistrationDisplayNames()
     {
@@ -269,13 +270,15 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
             throw new InvalidOperationException($"Engine capability '{capability.DisplayName}' has no mapped engine player.");
         }
 
-        return new EngineCapabilityWithPlayerModel(
-            capability.Id,
-            player.Id,
-            capability.DisplayName,
-            capability.MaxBoardSizeX,
-            capability.MaxBoardSizeY,
-            capability.Depth);
+        return new EngineCapabilityWithPlayerModel
+        {
+            Id = capability.Id,
+            PlayerId = player.Id,
+            DisplayName = capability.DisplayName,
+            MaxBoardSizeX = capability.MaxBoardSizeX,
+            MaxBoardSizeY = capability.MaxBoardSizeY,
+            Depth = capability.Depth,
+        };
     }
 
     private static bool TryParseEngineExternalId(string? externalId, out Guid engineId)

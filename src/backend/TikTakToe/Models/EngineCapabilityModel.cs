@@ -3,7 +3,7 @@ namespace TikTakToe.Models;
 /// <summary>
 /// Describes the persisted capabilities for an engine implementation.
 /// </summary>
-public sealed class EngineCapabilityModel
+public class EngineCapabilityModel
 {
     /// <summary>
     /// Gets or sets the engine identifier.
