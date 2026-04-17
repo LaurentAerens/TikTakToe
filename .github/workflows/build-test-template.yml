@@ -65,6 +65,14 @@ jobs:
           PROJECT_PATH: ${{ inputs.project_path }}
         run: dotnet build --no-restore --configuration Release -p:CI="$CI" "$PROJECT_PATH"
 
+      - name: Build Frontend Docker Image
+        run: |
+          docker build \
+            --file "src/frontend/Dockerfile" \
+            --tag "tiktaktoe-frontend:latest" \
+            --tag "tiktaktoe-frontend:${{ github.sha }}" \
+            "src/frontend"
+
       - name: Run Tests
         if: ${{ inputs.run_tests }}
         env:
