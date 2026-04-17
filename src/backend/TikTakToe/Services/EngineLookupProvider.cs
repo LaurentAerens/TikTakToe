@@ -12,8 +12,12 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
     [
         new("Classical", 3, 3, true, () => new ClassicalEngine()),
         new("Half Depth", 3, 3, true, () => new HalfDepthEngine()),
+        new("Inverse", 3, 3, true, () => new InverseEngine()),
+        new("Disconnected", 3, 3, true, () => new DisconnectedEngine()),
         new("Halftunity", 3, 3, true, () => new HalftunityEngine()),
+        new("Disconnicament", 3, 3, true, () => new DisconnicamentEngine()),
         new("Opportunity", 3, 3, true, () => new OpportunityEngine()),
+        new("Predicament", 3, 3, true, () => new PredicamentEngine()),
         new("Random", 10000, 10000, false, () => new RandomEngine()),
     ];
 
@@ -196,6 +200,7 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
             .Where(x => x.IsEngine && x.GameId == null)
             .ToListAsync(cancellationToken);
 
+        var hasChanges = false;
         var playersByEngineId = new Dictionary<Guid, PlayerModel>();
         foreach (var player in existingEnginePlayers)
         {
@@ -209,10 +214,14 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
                 throw new InvalidOperationException($"Multiple engine players map to engine id '{parsedEngineId:D}'.");
             }
 
-            player.ExternalId = parsedEngineId.ToString("D");
+            var normalizedExternalId = parsedEngineId.ToString("D");
+            if (!string.Equals(player.ExternalId, normalizedExternalId, StringComparison.Ordinal))
+            {
+                player.ExternalId = normalizedExternalId;
+                hasChanges = true;
+            }
         }
 
-        var hasChanges = false;
         foreach (var capability in capabilities)
         {
             if (playersByEngineId.ContainsKey(capability.Id))
