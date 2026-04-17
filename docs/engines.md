@@ -10,9 +10,9 @@
 | `OpportunityEngine`    | Engine plays optimally; assumes opponent moves randomly.         |
 | `HalftunityEngine`     | Heuristic evaluation + random-opponent assumption.               |
 | `InverseEngine`        | Classical weak style that tries to maximize the opponent's odds. |
-| `DisconnectedEngine`   | Maximin engine with heuristic evaluation.                        |
+| `DisconnectedEngine`   | Maxmin engine with heuristic evaluation (plays to lose).         |
 | `PredicamentEngine`    | Opportunity but tries to maximize opponent's chance of winning.  |
-| `DisconnicamentEngine` | Predicament + heuristic evaluation.                              |
+| `DisconnicamentEngine` | Predicament + maxmin heuristic evaluation.                       |
 
 ---
 
