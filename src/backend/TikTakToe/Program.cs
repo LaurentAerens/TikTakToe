@@ -7,7 +7,6 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Register services
-builder.Services.AddSingleton<IExampleService, ExampleService>();
 builder.Services.AddOptions<DatabaseConnectionOptions>()
 	.Configure<IConfiguration>((options, configuration) =>
 	{
@@ -27,6 +26,7 @@ builder.Services.AddDbContext<GameDbContext>((serviceProvider, options) =>
 	options.UseNpgsql(connectionStringResolver.Resolve());
 });
 builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IEngineLookupProvider, EngineLookupProvider>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -39,9 +39,16 @@ if (app.Environment.IsDevelopment())
 	dbContext.Database.Migrate();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+	var engineLookupProvider = scope.ServiceProvider.GetRequiredService<IEngineLookupProvider>();
+	await engineLookupProvider.EnsureCapabilitiesAsync();
+}
+
 // Map endpoints
 app.MapHealthController();
 app.MapGameController();
+app.MapEngineLookupController();
 if (exposeApiDocs)
 {
 	app.MapOpenApi();

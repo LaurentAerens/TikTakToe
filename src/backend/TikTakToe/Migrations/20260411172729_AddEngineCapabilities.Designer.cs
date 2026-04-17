@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TikTakToe.Data;
@@ -11,9 +12,11 @@ using TikTakToe.Data;
 namespace TikTakToe.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260411172729_AddEngineCapabilities")]
+    partial class AddEngineCapabilities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,17 +50,9 @@ namespace TikTakToe.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("max_board_size_y");
 
-                    b.Property<string>("NormalizedDisplayName")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("normalized_display_name");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DisplayName")
-                        .IsUnique();
-
-                    b.HasIndex("NormalizedDisplayName")
                         .IsUnique();
 
                     b.ToTable("engine_capabilities", (string)null);
@@ -140,7 +135,7 @@ namespace TikTakToe.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("external_id");
 
-                    b.Property<Guid?>("GameId")
+                    b.Property<Guid>("GameId")
                         .HasColumnType("uuid")
                         .HasColumnName("game_id");
 
@@ -149,11 +144,6 @@ namespace TikTakToe.Migrations
                         .HasColumnName("is_engine");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ExternalId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_players_engine_template_external_id")
-                        .HasFilter("\"is_engine\" = TRUE AND \"game_id\" IS NULL AND \"external_id\" IS NOT NULL");
 
                     b.HasIndex("GameId");
 
@@ -176,7 +166,8 @@ namespace TikTakToe.Migrations
                     b.HasOne("TikTakToe.Models.GameModel", "Game")
                         .WithMany("Players")
                         .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Game");
                 });

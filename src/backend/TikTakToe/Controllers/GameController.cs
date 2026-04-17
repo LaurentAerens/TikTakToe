@@ -9,6 +9,8 @@ namespace TikTakToe.Controllers;
 public static class GameController
 {
     private const int _maxBoardDimension = 10_000;
+    private const int _minPlayers = 2;
+    private const int _maxPlayers = 1000;
 
     /// <summary>
     /// Maps game controller routes to the application.
@@ -20,6 +22,7 @@ public static class GameController
         {
             var rows = request.Rows <= 0 ? 3 : request.Rows;
             var cols = request.Cols <= 0 ? 3 : request.Cols;
+            var playerIds = request.PlayerIds;
 
             if (rows > _maxBoardDimension || cols > _maxBoardDimension)
             {
@@ -28,8 +31,21 @@ public static class GameController
                         $"Board dimensions must be less than or equal to {_maxBoardDimension}. Requested rows={rows}, cols={cols}."));
             }
 
-            var game = await gameService.CreateAsync(rows, cols, cancellationToken);
-            return Results.Created($"/games/{game.Id}", ApiResponse<GameDto>.Ok(ToDto(game)));
+            if (playerIds is null || playerIds.Length < _minPlayers || playerIds.Length > _maxPlayers)
+            {
+                return Results.BadRequest(
+                    ApiResponse<GameDto>.Fail($"A game requires between {_minPlayers} and {_maxPlayers} player ids."));
+            }
+
+            try
+            {
+                var game = await gameService.CreateAsync(rows, cols, playerIds, cancellationToken);
+                return Results.Created($"/games/{game.Id}", ApiResponse<GameDto>.Ok(ToDto(game)));
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(ApiResponse<GameDto>.Fail(ex.Message));
+            }
         })
         .WithName("CreateGame")
         .WithSummary("Creates a new game with a rectangular board stored as jsonb");
@@ -80,7 +96,7 @@ public static class GameController
         return result;
     }
 
-    private sealed record CreateGameRequest(int Rows = 3, int Cols = 3);
+    private sealed record CreateGameRequest(int Rows = 3, int Cols = 3, Guid[]? PlayerIds = null);
     private sealed record GameDto(Guid Id, int[][] Board, PlayerDto[] Players, MoveDto[] Moves);
     private sealed record PlayerDto(Guid Id, bool IsEngine, string? ExternalId);
     private sealed record MoveDto(Guid Id, int X, int Y, int Value, int MoveNumber);
