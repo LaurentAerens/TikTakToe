@@ -10,7 +10,7 @@ namespace TikTakToe.Services;
 public sealed class GameService(GameDbContext dbContext) : IGameService
 {
     /// <inheritdoc />
-    public async Task<GameModel> CreateAsync(int rows, int cols, IReadOnlyList<Guid>? playerIds = null, CancellationToken cancellationToken = default)
+    public async Task<GameModel> CreateAsync(int rows, int cols, IReadOnlyList<Guid> playerIds, CancellationToken cancellationToken = default)
     {
         if (rows <= 0)
         {
@@ -22,67 +22,43 @@ public sealed class GameService(GameDbContext dbContext) : IGameService
             throw new ArgumentOutOfRangeException(nameof(cols), "Board dimensions must be greater than zero.");
         }
 
-        List<PlayerModel> gamePlayers;
-        if (playerIds is null)
+        if (playerIds.Count == 0)
         {
-            gamePlayers =
-            [
-                new PlayerModel
-                {
-                    Id = Guid.NewGuid(),
-                    IsEngine = false,
-                    ExternalId = null,
-                },
-                new PlayerModel
-                {
-                    Id = Guid.NewGuid(),
-                    IsEngine = false,
-                    ExternalId = null,
-                },
-            ];
+            throw new ArgumentException("At least one player id is required.", nameof(playerIds));
         }
-        else
+
+        var uniquePlayerIds = playerIds.Distinct().ToArray();
+        if (uniquePlayerIds.Length != playerIds.Count)
         {
-            if (playerIds.Count == 0)
-            {
-                throw new ArgumentException("At least one player id is required.", nameof(playerIds));
-            }
+            throw new ArgumentException("Player ids must be unique.", nameof(playerIds));
+        }
 
-            var uniquePlayerIds = playerIds.Distinct().ToArray();
-            if (uniquePlayerIds.Length != playerIds.Count)
-            {
-                throw new ArgumentException("Player ids must be unique.", nameof(playerIds));
-            }
+        var sourcePlayers = await dbContext.Players
+            .AsNoTracking()
+            .Where(x => uniquePlayerIds.Contains(x.Id))
+            .ToListAsync(cancellationToken);
 
-            var sourcePlayers = await dbContext.Players
-                .AsNoTracking()
-                .Where(x => uniquePlayerIds.Contains(x.Id))
-                .ToListAsync(cancellationToken);
+        if (sourcePlayers.Count != uniquePlayerIds.Length)
+        {
+            var found = sourcePlayers.Select(x => x.Id).ToHashSet();
+            var missing = uniquePlayerIds.Where(x => !found.Contains(x)).ToArray();
+            throw new ArgumentException($"Unknown player id(s): {string.Join(",", missing.Select(x => x.ToString("D")))}", nameof(playerIds));
+        }
 
-            if (sourcePlayers.Count != uniquePlayerIds.Length)
-            {
-                var found = sourcePlayers.Select(x => x.Id).ToHashSet();
-                var missing = uniquePlayerIds.Where(x => !found.Contains(x)).ToArray();
-                throw new ArgumentException($"Unknown player id(s): {string.Join(",", missing.Select(x => x.ToString("D")))}", nameof(playerIds));
-            }
+        var sourcePlayersById = sourcePlayers.ToDictionary(x => x.Id);
+        var orderedSourcePlayers = uniquePlayerIds.Select(x => sourcePlayersById[x]).ToArray();
 
-            var sourcePlayersById = sourcePlayers.ToDictionary(x => x.Id);
-            var orderedSourcePlayers = uniquePlayerIds.Select(x => sourcePlayersById[x]).ToArray();
-
-            gamePlayers = orderedSourcePlayers
+        var game = new GameModel
+        {
+            Board = new int[rows, cols],
+            Players = orderedSourcePlayers
                 .Select(player => new PlayerModel
                 {
                     Id = Guid.NewGuid(),
                     IsEngine = player.IsEngine,
                     ExternalId = player.ExternalId,
                 })
-                .ToList();
-        }
-
-        var game = new GameModel
-        {
-            Board = new int[rows, cols],
-            Players = gamePlayers,
+                .ToList(),
         };
         dbContext.Games.Add(game);
         await dbContext.SaveChangesAsync(cancellationToken);

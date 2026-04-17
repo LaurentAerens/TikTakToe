@@ -32,20 +32,6 @@ public sealed class GameServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_WithoutPlayerIds_CreatesDefaultHumanPlayers()
-    {
-        await using var dbContext = CreateDbContext();
-        var service = new GameService(dbContext);
-
-        var game = await service.CreateAsync(3, 3, null);
-
-        Assert.NotEqual(Guid.Empty, game.Id);
-        Assert.Equal(2, game.Players.Count);
-        Assert.All(game.Players, player => Assert.False(player.IsEngine));
-        Assert.All(game.Players, player => Assert.Null(player.ExternalId));
-    }
-
-    [Fact]
     public async Task CreateAsync_WithInvalidDimensions_ThrowsArgumentOutOfRangeException()
     {
         await using var dbContext = CreateDbContext();

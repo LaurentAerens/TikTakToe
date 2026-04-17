@@ -12,10 +12,10 @@ public interface IGameService
     /// </summary>
     /// <param name="rows">Board row count.</param>
     /// <param name="cols">Board column count.</param>
-    /// <param name="playerIds">Optional source player identifiers to clone into the game.</param>
+    /// <param name="playerIds">Source player identifiers to clone into the game.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created game model.</returns>
-    Task<GameModel> CreateAsync(int rows, int cols, IReadOnlyList<Guid>? playerIds = null, CancellationToken cancellationToken = default);
+    Task<GameModel> CreateAsync(int rows, int cols, IReadOnlyList<Guid> playerIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a game by identifier.

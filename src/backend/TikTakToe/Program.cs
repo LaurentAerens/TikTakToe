@@ -27,7 +27,6 @@ builder.Services.AddDbContext<GameDbContext>((serviceProvider, options) =>
 });
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IEngineLookupProvider, EngineLookupProvider>();
-builder.Services.AddHostedService<EngineCapabilitySeederHostedService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -38,6 +37,12 @@ if (app.Environment.IsDevelopment())
 	using var scope = app.Services.CreateScope();
 	var dbContext = scope.ServiceProvider.GetRequiredService<GameDbContext>();
 	dbContext.Database.Migrate();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+	var engineLookupProvider = scope.ServiceProvider.GetRequiredService<IEngineLookupProvider>();
+	await engineLookupProvider.EnsureCapabilitiesAsync();
 }
 
 // Map endpoints

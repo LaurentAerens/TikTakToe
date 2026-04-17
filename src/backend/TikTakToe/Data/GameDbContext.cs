@@ -246,11 +246,8 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
 
         var existing = Players
             .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null)
+            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
             .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
-            .ToList()
-            .Select(x => new ExistingEnginePlayer(x.Id, NormalizeEngineExternalId(x.ExternalId)))
-            .Where(x => engineExternalIds.Contains(x.ExternalId, StringComparer.Ordinal))
             .ToList();
 
         ValidateEnginePlayersAgainstExisting(engineCandidates, existing);
@@ -275,14 +272,11 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
-        var existing = (await Players
+        var existing = await Players
             .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null)
+            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
             .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
-            .ToListAsync(cancellationToken))
-            .Select(x => new ExistingEnginePlayer(x.Id, NormalizeEngineExternalId(x.ExternalId)))
-            .Where(x => engineExternalIds.Contains(x.ExternalId, StringComparer.Ordinal))
-            .ToList();
+            .ToListAsync(cancellationToken);
 
         ValidateEnginePlayersAgainstExisting(engineCandidates, existing);
     }
