@@ -1,10 +1,10 @@
 namespace TikTakToe.Engines.Search;
 
 /// <summary>
-/// Oppertunity strategy: the engine plays optimally, while opponent turns are averaged.
+/// Opportunity strategy: the engine plays optimally, while opponent turns are averaged.
 /// This maximises the chance the opponent makes a mistake rather than assuming they play perfectly.
 /// </summary>
-public sealed class OppertunityOpponentStrategy : IOpponentStrategy
+public sealed class OpportunityOpponentStrategy : IOpponentStrategy
 {
     public int AggregateScores(IReadOnlyList<int> scores, int currentPlayer, int enginePlayer)
     {

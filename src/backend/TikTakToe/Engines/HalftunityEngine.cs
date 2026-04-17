@@ -9,7 +9,7 @@ namespace TikTakToe.Engines;
 /// </summary>
 public sealed class HalftunityEngine : MinimaxEngineBase
 {
-    public HalftunityEngine() : base(new HalfDepthBoardEvaluator(), new OppertunityOpponentStrategy())
+    public HalftunityEngine() : base(new HalfDepthBoardEvaluator(), new OpportunityOpponentStrategy())
     {
     }
 }

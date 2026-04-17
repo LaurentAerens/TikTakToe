@@ -80,16 +80,16 @@ public sealed class EngineLookupProviderTests
         var provider = new EngineLookupProvider(dbContext);
         await provider.EnsureCapabilitiesAsync();
 
-        var oppertunity = await provider.GetByDisplayNameAsync("Oppertunity");
-        Assert.NotNull(oppertunity);
+        var opportunity = await provider.GetByDisplayNameAsync("Opportunity");
+        Assert.NotNull(opportunity);
 
-        var engine = await provider.CreateEngineByIdAsync(oppertunity!.Id);
+        var engine = await provider.CreateEngineByIdAsync(opportunity!.Id);
         Assert.NotNull(engine);
-        Assert.Equal("OppertunityEngine", engine!.GetType().Name);
+        Assert.Equal("OpportunityEngine", engine!.GetType().Name);
 
-        var engineByPlayerId = await provider.CreateEngineByPlayerIdAsync(oppertunity.PlayerId);
+        var engineByPlayerId = await provider.CreateEngineByPlayerIdAsync(opportunity.PlayerId);
         Assert.NotNull(engineByPlayerId);
-        Assert.Equal("OppertunityEngine", engineByPlayerId!.GetType().Name);
+        Assert.Equal("OpportunityEngine", engineByPlayerId!.GetType().Name);
 
         var missing = await provider.CreateEngineByIdAsync(Guid.NewGuid());
         Assert.Null(missing);

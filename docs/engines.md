@@ -7,7 +7,7 @@
 | `ClassicalEngine`    | Perfect minimax — both players play optimally.                      |
 | `HalfDepthEngine`    | Minimax with heuristic evaluation (positional bonuses).             |
 | `RandomEngine`       | Picks a random legal move every time.                               |
-| `OppertunityEngine`  | Engine plays optimally; assumes opponent moves randomly.            |
+| `OpportunityEngine`  | Engine plays optimally; assumes opponent moves randomly.            |
 | `HalftunityEngine`   | Heuristic evaluation + random-opponent assumption.                  |
 
 ---
