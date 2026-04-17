@@ -10,7 +10,7 @@ public class SearchEngineBehaviorTest
     {
         yield return new object[] { new Func<IEngine>(() => new ClassicalEngine()) };
         yield return new object[] { new Func<IEngine>(() => new HalfDepthEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new OppertunityEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new OpportunityEngine()) };
         yield return new object[] { new Func<IEngine>(() => new HalftunityEngine()) };
     }
 

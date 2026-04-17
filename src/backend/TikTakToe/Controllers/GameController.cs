@@ -31,7 +31,7 @@ public static class GameController
                         $"Board dimensions must be less than or equal to {_maxBoardDimension}. Requested rows={rows}, cols={cols}."));
             }
 
-            if (playerIds is null || playerIds.Length < _minPlayers || playerIds.Length > _maxPlayers)
+            if (playerIds is not null && (playerIds.Length < _minPlayers || playerIds.Length > _maxPlayers))
             {
                 return Results.BadRequest(
                     ApiResponse<GameDto>.Fail($"A game requires between {_minPlayers} and {_maxPlayers} player ids."));

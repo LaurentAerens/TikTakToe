@@ -11,7 +11,7 @@ while (true)
     Console.WriteLine("1) Random");
     Console.WriteLine("2) Classical");
     Console.WriteLine("3) HalfDepth");
-    Console.WriteLine("4) Oppertunity");
+    Console.WriteLine("4) Opportunity");
     Console.WriteLine("5) Halftunity");
     Console.Write("Enter choice (1-5, default 1): ");
     var engineChoice = Console.ReadLine();
@@ -19,7 +19,7 @@ while (true)
     {
         "2" => new ClassicalEngine(),
         "3" => new HalfDepthEngine(),
-        "4" => new OppertunityEngine(),
+        "4" => new OpportunityEngine(),
         "5" => new HalftunityEngine(),
         _ => new RandomEngine()
     };
