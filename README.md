@@ -109,7 +109,7 @@ Starts the full production stack:
 - PostgreSQL database
 
 ```bash
-docker compose --profile prod up --build
+docker compose --profile prd up --build
 ```
 
 **Available at:**

@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
 
   backend:
-    profiles: ["prod", "test"]
+    profiles: ["prd", "test"]
     build:
       context: ./src/backend
       dockerfile: Dockerfile
@@ -90,7 +90,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    profiles: ["prod"]
+    profiles: ["prd"]
     build:
       context: ./src/frontend
       dockerfile: Dockerfile
