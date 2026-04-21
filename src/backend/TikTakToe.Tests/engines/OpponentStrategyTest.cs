@@ -36,4 +36,26 @@ public class OpponentStrategyTest
 
         Assert.Equal(-1000, aggregate);
     }
+
+    [Fact]
+    public void AggregateScores_MaxminEngineTurn_Player1Engine_ChoosesWorstForEngine()
+    {
+        var strategy = new MaxminOpponentStrategy();
+        var scores = new[] { 1000, 0, -1000 };
+
+        var aggregate = strategy.AggregateScores(scores, currentPlayer: 1, enginePlayer: 1);
+
+        Assert.Equal(-1000, aggregate);
+    }
+
+    [Fact]
+    public void AggregateScores_MaxminOpportunityOpponentTurn_Player1Engine_ReturnsAverageChild()
+    {
+        var strategy = new MaxminOpportunityOpponentStrategy();
+        var scores = new[] { 1000, 0, -1000 };
+
+        var aggregate = strategy.AggregateScores(scores, currentPlayer: 2, enginePlayer: 1);
+
+        Assert.Equal(0, aggregate);
+    }
 }

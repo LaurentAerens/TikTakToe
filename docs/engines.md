@@ -2,13 +2,17 @@
 
 ## Available Engines
 
-| Engine               | Strategy description                                                |
-|----------------------|---------------------------------------------------------------------|
-| `ClassicalEngine`    | Perfect minimax — both players play optimally.                      |
-| `HalfDepthEngine`    | Minimax with heuristic evaluation (positional bonuses).             |
-| `RandomEngine`       | Picks a random legal move every time.                               |
-| `OpportunityEngine`  | Engine plays optimally; assumes opponent moves randomly.            |
-| `HalftunityEngine`   | Heuristic evaluation + random-opponent assumption.                  |
+| Engine                 | Strategy description                                             |
+| ---------------------- | ---------------------------------------------------------------- |
+| `ClassicalEngine`      | Perfect minimax — both players play optimally.                   |
+| `HalfDepthEngine`      | Minimax with heuristic evaluation (positional bonuses).          |
+| `RandomEngine`         | Picks a random legal move every time.                            |
+| `OpportunityEngine`    | Engine plays optimally; assumes opponent moves randomly.         |
+| `HalftunityEngine`     | Heuristic evaluation + random-opponent assumption.               |
+| `InverseEngine`        | Classical weak style that tries to maximize the opponent's odds. |
+| `DisconnectedEngine`   | Maxmin engine with heuristic evaluation (plays to lose).         |
+| `PredicamentEngine`    | Opportunity but tries to maximize opponent's chance of winning.  |
+| `DisconnicamentEngine` | Predicament + maxmin heuristic evaluation.                       |
 
 ---
 
