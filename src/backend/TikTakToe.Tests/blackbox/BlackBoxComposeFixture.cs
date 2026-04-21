@@ -6,6 +6,7 @@ namespace TikTakToe.Tests.BlackBox;
 public sealed class BlackBoxComposeFixture : IAsyncLifetime
 {
     private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(2);
+    private const string ComposeBaseArguments = "compose -p tiktaktoe-blackbox -f docker-compose.yml --profile test";
     private readonly string repositoryRoot;
 
     public BlackBoxComposeFixture()
@@ -67,7 +68,7 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
         var startInfo = new ProcessStartInfo
         {
             FileName = "docker",
-            Arguments = $"compose -f docker-compose.yml {arguments}",
+            Arguments = $"{ComposeBaseArguments} {arguments}",
             WorkingDirectory = repositoryRoot,
             RedirectStandardError = true,
             RedirectStandardOutput = true,

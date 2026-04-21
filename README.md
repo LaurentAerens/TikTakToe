@@ -54,6 +54,12 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
 
 ## 🧱 Build & Run Locally
 
+When switching modes, run this first to avoid stale containers from a previous profile:
+
+```bash
+docker compose down --remove-orphans
+```
+
 ### Backend
 
 #### Without Docker
@@ -65,12 +71,19 @@ dotnet build --configuration Release
 dotnet run --project TikTakToe
 ```
 
-#### With Docker Compose
+#### With Docker Compose (single file)
 
 ```bash
 export POSTGRES_PASSWORD=replace-with-a-strong-dev-password
-docker compose up -d --build
+docker compose --profile dev up --build --watch
 ```
+
+In `dev` mode this starts:
+
+- Backend in Development mode (Scalar/OpenAPI enabled)
+- Frontend Vite dev server with live updates
+- Postgres
+- DB explorer (pgweb)
 
 The API will be available at **http://localhost:8080**.
 
@@ -79,11 +92,12 @@ The API will be available at **http://localhost:8080**.
 #### Development
 
 ```bash
-cd src/frontend
-docker compose up dev --watch
+docker compose --profile dev up --build --watch
 ```
 
 Frontend will be available on **http://localhost:5173**.
+
+Database explorer will also be available on **http://localhost:8081**.
 
 ##### Using Yarn
 
@@ -103,11 +117,18 @@ docker run -p 5173:5173 tiktaktoe-frontend-dev
 #### Production
 
 ```bash
-cd src/frontend
-docker compose up prod
+docker compose --profile app up --build
 ```
 
-Frontend will be avalible on **http://localhost:3000**.
+Frontend will be available on **http://localhost:3000**.
+
+#### Black-box test stack (DB + backend)
+
+```bash
+docker compose --profile test up --build
+```
+
+This starts only Postgres and backend.
 
 ##### Without compose
 
