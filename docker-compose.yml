@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
 
   backend:
-    profiles: ["app", "test"]
+    profiles: ["prod", "test"]
     build:
       context: ./src/backend
       dockerfile: Dockerfile
@@ -74,31 +74,23 @@ services:
       - "${FRONTEND_DEV_PORT:-5173}:5173"
     environment:
       - NODE_ENV=development
+    volumes:
+      - ./src/frontend/src:/app/src
+      - ./src/frontend/public:/app/public
+      - ./src/frontend/index.html:/app/index.html
+      - ./src/frontend/vite.config.ts:/app/vite.config.ts
+      - ./src/frontend/tsconfig.json:/app/tsconfig.json
+      - ./src/frontend/tsconfig.app.json:/app/tsconfig.app.json
+      - ./src/frontend/tsconfig.node.json:/app/tsconfig.node.json
     depends_on:
       backend-dev:
         condition: service_started
-    develop:
-      watch:
-        - action: sync
-          path: ./src/frontend/src
-          target: /app/src
-          ignore:
-            - node_modules/
-        - action: rebuild
-          path: ./src/frontend/package.json
-          target: /app/package.json
-        - action: rebuild
-          path: ./src/frontend/yarn.lock
-          target: /app/yarn.lock
-        - action: rebuild
-          path: ./src/frontend/vite.config.ts
-          target: /app/vite.config.ts
     networks:
       - tiktaktoe-network
     restart: unless-stopped
 
   frontend:
-    profiles: ["app"]
+    profiles: ["prod"]
     build:
       context: ./src/frontend
       dockerfile: Dockerfile
