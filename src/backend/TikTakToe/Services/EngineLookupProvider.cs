@@ -214,7 +214,7 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
                 throw new InvalidOperationException($"Multiple engine players map to engine id '{parsedEngineId:D}'.");
             }
 
-            var normalizedExternalId = parsedEngineId.ToString("D");
+            var normalizedExternalId = parsedEngineId.ToString();
             if (!string.Equals(player.ExternalId, normalizedExternalId, StringComparison.Ordinal))
             {
                 player.ExternalId = normalizedExternalId;
@@ -233,7 +233,7 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
             {
                 Id = Guid.NewGuid(),
                 IsEngine = true,
-                ExternalId = capability.Id.ToString("D"),
+                ExternalId = capability.Id.ToString(),
             });
             hasChanges = true;
         }
@@ -259,7 +259,7 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
                 continue;
             }
 
-            var key = engineId.ToString("D");
+            var key = engineId.ToString();
             if (!playersByExternalId.TryAdd(key, player))
             {
                 throw new InvalidOperationException($"Multiple engine players map to engine id '{key}'.");
@@ -273,7 +273,7 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
         EngineCapabilityModel capability,
         IReadOnlyDictionary<string, PlayerModel> playersByExternalId)
     {
-        var key = capability.Id.ToString("D");
+        var key = capability.Id.ToString();
         if (!playersByExternalId.TryGetValue(key, out var player))
         {
             throw new InvalidOperationException($"Engine capability '{capability.DisplayName}' has no mapped engine player.");
