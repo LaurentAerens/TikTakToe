@@ -61,13 +61,23 @@ public abstract class MinimaxEngineBase : IEngine
         {
             throw new BoardSizeNotSupportedException(nameof(MinimaxEngineBase), board.GetLength(0), board.GetLength(1));
         }
-        if (depth.HasValue)
+
+        var remaining = 0;
+        for (var x = 0; x < board.GetLength(0); x++)
         {
-            var (_, score) = MinimaxRecursive(board, player, depth.Value, player);
-            return score;
+            for (var y = 0; y < board.GetLength(1); y++)
+            {
+                if (board[x, y] == 0)
+                {
+                    remaining++;
+                }
+            }
         }
 
-        return _boardEvaluator.Evaluate(board);
+        // Match Move behavior: by default evaluate to full remaining plies.
+        var useDepth = depth ?? remaining;
+        var (_, score) = MinimaxRecursive(board, player, useDepth, player);
+        return score;
     }
 
     /// <summary>

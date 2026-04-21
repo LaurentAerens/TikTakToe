@@ -33,6 +33,53 @@ public class SearchEngineBehaviorTest
 
     [Theory]
     [MemberData(nameof(SearchEngineFactories))]
+    public void Eval_WithoutDepth_MatchesFullRemainingDepthSearch(Func<IEngine> factory)
+    {
+        var engine = factory();
+        var board = new int[3, 3]
+        {
+            { 1, 1, 0 },
+            { 2, 1, 2 },
+            { 2, 0, 0 }
+        };
+
+        var remaining = 0;
+        for (var x = 0; x < 3; x++)
+        {
+            for (var y = 0; y < 3; y++)
+            {
+                if (board[x, y] == 0)
+                {
+                    remaining++;
+                }
+            }
+        }
+
+        var noDepthScore = engine.Eval(board, player: 1);
+        var explicitDepthScore = engine.Eval(board, player: 1, depth: remaining);
+
+        Assert.Equal(explicitDepthScore, noDepthScore);
+    }
+
+    [Theory]
+    [MemberData(nameof(SearchEngineFactories))]
+    public void Eval_WithoutDepth_FindsImmediateWinningPosition(Func<IEngine> factory)
+    {
+        var engine = factory();
+        var board = new int[3, 3]
+        {
+            { 1, 1, 0 },
+            { 2, 1, 2 },
+            { 2, 0, 0 }
+        };
+
+        var score = engine.Eval(board, player: 1);
+
+        Assert.Equal(1000, score);
+    }
+
+    [Theory]
+    [MemberData(nameof(SearchEngineFactories))]
     public void Eval_NonStandardBoard_ThrowsBoardSizeNotSupportedException(Func<IEngine> factory)
     {
         var engine = factory();
