@@ -54,9 +54,71 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
 
 ## 🧱 Build & Run Locally
 
-### Backend
+### With Docker (Recommended)
 
-#### Without Docker
+Set your database password before starting:
+
+```bash
+export POSTGRES_PASSWORD=replace-with-a-strong-dev-password
+```
+
+When switching between modes, clean up first to avoid stale containers:
+
+```bash
+docker compose down --remove-orphans
+```
+
+#### Development Mode
+
+Starts the full development stack with hot-reload and debugging tools:
+
+- Backend (Development mode with Scalar/OpenAPI)
+- Frontend (Vite dev server with live updates)
+- PostgreSQL database
+- Database explorer (pgweb)
+
+```bash
+docker compose --profile dev up --build
+```
+
+**Available at:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8080
+- Database Explorer: http://localhost:8081
+
+#### Test Mode
+
+Starts only the backend and database for black-box testing:
+
+- Backend (Production mode)
+- PostgreSQL database
+
+```bash
+docker compose --profile test up --build
+```
+
+**Available at:**
+- Backend API: http://localhost:8080
+
+#### Production Mode
+
+Starts the full production stack:
+
+- Backend (Production mode)
+- Frontend (optimized build)
+- PostgreSQL database
+
+```bash
+docker compose --profile prd up --build
+```
+
+**Available at:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080
+
+### Without Docker
+
+#### Backend
 
 ```bash
 cd src/backend
@@ -65,57 +127,19 @@ dotnet build --configuration Release
 dotnet run --project TikTakToe
 ```
 
-#### With Docker Compose
+Backend API will be available at **http://localhost:8080**.
 
-```bash
-export POSTGRES_PASSWORD=replace-with-a-strong-dev-password
-docker compose up -d --build
-```
+#### Frontend
 
-The API will be available at **http://localhost:8080**.
-
-### Frontend
-
-#### Development
+Development server:
 
 ```bash
 cd src/frontend
-docker compose up dev --watch
-```
-
-Frontend will be available on **http://localhost:5173**.
-
-##### Using Yarn
-
-```bash
-cd src/frontend
+yarn install
 yarn dev
 ```
 
-##### Without compose
-
-```bash
-cd src/frontend
-docker build -t tiktaktoe-frontend-dev -f Dockerfile.dev .
-docker run -p 5173:5173 tiktaktoe-frontend-dev
-```
-
-#### Production
-
-```bash
-cd src/frontend
-docker compose up prod
-```
-
-Frontend will be avalible on **http://localhost:3000**.
-
-##### Without compose
-
-```bash
-cd src/frontend
-docker build -t tiktaktoe-frontend -f Dockerfile .
-docker run -p 3000:80 tiktaktoe-frontend
-```
+Frontend will be available at **http://localhost:5173**.
 
 ---
 
