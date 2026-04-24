@@ -16,8 +16,9 @@ public sealed class EngineLookupProviderTests
         await provider.EnsureCapabilitiesAsync();
 
         var capabilities = await provider.ListCapabilitiesAsync();
-        Assert.Equal(5, capabilities.Count);
+        Assert.Equal(9, capabilities.Count);
         Assert.Contains(capabilities, x => x.DisplayName == "Classical" && x.Depth);
+        Assert.Contains(capabilities, x => x.DisplayName == "Inverse" && x.Depth);
         Assert.Contains(capabilities, x => x.DisplayName == "Random" && !x.Depth);
         Assert.All(capabilities, x => Assert.NotEqual(Guid.Empty, x.Id));
         Assert.All(capabilities, x => Assert.NotEqual(Guid.Empty, x.PlayerId));
@@ -90,6 +91,12 @@ public sealed class EngineLookupProviderTests
         var engineByPlayerId = await provider.CreateEngineByPlayerIdAsync(opportunity.PlayerId);
         Assert.NotNull(engineByPlayerId);
         Assert.Equal("OpportunityEngine", engineByPlayerId!.GetType().Name);
+
+        var disconnicament = await provider.GetByDisplayNameAsync("Disconnicament");
+        Assert.NotNull(disconnicament);
+        var weakEngine = await provider.CreateEngineByIdAsync(disconnicament!.Id);
+        Assert.NotNull(weakEngine);
+        Assert.Equal("DisconnicamentEngine", weakEngine!.GetType().Name);
 
         var missing = await provider.CreateEngineByIdAsync(Guid.NewGuid());
         Assert.Null(missing);

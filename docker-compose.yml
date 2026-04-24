@@ -1,41 +1,6 @@
 services:
-  frontend:
-    image: nginx:alpine
-    container_name: tiktaktoe-frontend
-    ports:
-      - "${FRONTEND_PORT:-3000}:80"
-    depends_on:
-      backend:
-        condition: service_started
-    networks:
-      - tiktaktoe-network
-    restart: unless-stopped
-
-  backend:
-    build:
-      context: ./src/backend
-      dockerfile: Dockerfile
-    container_name: tiktaktoe-backend
-    ports:
-      - "${BACKEND_PORT:-8080}:8080"
-    environment:
-      - ASPNETCORE_URLS=http://0.0.0.0:8080
-      - ASPNETCORE_ENVIRONMENT=Development
-      - PGHOST=postgres
-      - PGPORT=5432
-      - PGDATABASE=tiktaktoe
-      - PGUSER=app_user
-      - PGPASSWORD=${POSTGRES_PASSWORD:-changeme-dev-only}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - tiktaktoe-network
-    restart: unless-stopped
-
   postgres:
     image: postgres:16-alpine
-    container_name: tiktaktoe-postgres
     environment:
       - POSTGRES_DB=tiktaktoe
       - POSTGRES_USER=app_user
@@ -49,6 +14,113 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
+
+  backend:
+    profiles: ["prd", "test"]
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ASPNETCORE_ENVIRONMENT=Production
+      - FEATURES__EXPOSEAPIDOCS=${FEATURES__EXPOSEAPIDOCS:-false}
+      - FEATURES__APPLYMIGRATIONSONSTARTUP=${FEATURES__APPLYMIGRATIONSONSTARTUP:-false}
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=tiktaktoe
+      - PGUSER=app_user
+      - PGPASSWORD=${POSTGRES_PASSWORD:-changeme-dev-only}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
+
+  backend-dev:
+    profiles: ["dev"]
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FEATURES__EXPOSEAPIDOCS=true
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=tiktaktoe
+      - PGUSER=app_user
+      - PGPASSWORD=${POSTGRES_PASSWORD:-changeme-dev-only}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
+
+  frontend-dev:
+    profiles: ["dev"]
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${FRONTEND_DEV_PORT:-5173}:5173"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./src/frontend/src:/app/src
+      - ./src/frontend/public:/app/public
+      - ./src/frontend/index.html:/app/index.html
+      - ./src/frontend/vite.config.ts:/app/vite.config.ts
+      - ./src/frontend/tsconfig.json:/app/tsconfig.json
+      - ./src/frontend/tsconfig.app.json:/app/tsconfig.app.json
+      - ./src/frontend/tsconfig.node.json:/app/tsconfig.node.json
+    depends_on:
+      backend-dev:
+        condition: service_started
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
+
+  frontend:
+    profiles: ["prd"]
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - tiktaktoe-network
+    restart: unless-stopped
+
+  db-explorer:
+    profiles: ["dev"]
+    image: sosedoff/pgweb:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://app_user:${POSTGRES_PASSWORD:-changeme-dev-only}@postgres:5432/tiktaktoe?sslmode=disable
+    command:
+      - /usr/bin/pgweb
+      - --bind=0.0.0.0
+      - --listen=8081
+      - --url=postgres://app_user:${POSTGRES_PASSWORD:-changeme-dev-only}@postgres:5432/tiktaktoe?sslmode=disable
+      - --skip-open
+    ports:
+      - "${DB_EXPLORER_PORT:-8081}:8081"
     networks:
       - tiktaktoe-network
     restart: unless-stopped

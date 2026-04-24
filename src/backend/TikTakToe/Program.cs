@@ -32,8 +32,9 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 var exposeApiDocs = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Features:ExposeApiDocs");
+var applyMigrationsOnStartup = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Features:ApplyMigrationsOnStartup");
 
-if (app.Environment.IsDevelopment())
+if (applyMigrationsOnStartup)
 {
 	using var scope = app.Services.CreateScope();
 	var dbContext = scope.ServiceProvider.GetRequiredService<GameDbContext>();

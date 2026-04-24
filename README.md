@@ -20,22 +20,26 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
 ├── docs/                           # Extended documentation
 │   └── engines.md                  # Engine architecture, interfaces & guide
 └── src/
-    └── backend/                    # Backend workspace
-        ├── Dockerfile              # Backend container build definition
-        ├── TikTakToe.slnx          # Solution file
-        ├── TikTakToe/              # Main application project
-        │   ├── Program.cs          # Entry point & DI configuration
-        │   ├── Endpoints/          # Minimal-API endpoint definitions
-        │   ├── Models/             # Data models / DTOs
-        │   ├── Services/           # Business-logic services
-        │   └── Engines/            # AI engine implementations
-        │       ├── Interface/      # IEngine contract
-        │       ├── Evaluation/     # Board evaluator implementations
-        │       ├── Search/         # Opponent strategy implementations
-        │       └── Exceptions/     # Engine-specific exceptions
-        ├── TikTakToe.Console/      # Console test harness
-        └── TikTakToe.Tests/        # xUnit test project
-            └── engines/            # Engine contract & behaviour tests
+    ├── backend/                    # Backend workspace
+    │   ├── Dockerfile              # Backend container build definition
+    │   ├── TikTakToe.slnx          # Solution file
+    │   ├── TikTakToe/              # Main application project
+    │   │   ├── Program.cs          # Entry point & DI configuration
+    │   │   ├── Endpoints/          # Minimal-API endpoint definitions
+    │   │   ├── Models/             # Data models / DTOs
+    │   │   ├── Services/           # Business-logic services
+    │   │   └── Engines/            # AI engine implementations
+    │   │       ├── Interface/      # IEngine contract
+    │   │       ├── Evaluation/     # Board evaluator implementations
+    │   │       ├── Search/         # Opponent strategy implementations
+    │   │       └── Exceptions/     # Engine-specific exceptions
+    │   ├── TikTakToe.Console/      # Console test harness
+    │   └── TikTakToe.Tests/        # xUnit test project
+    │       └── engines/            # Engine contract & behaviour tests
+    └── frontend/                   # Frontend workspace
+        ├── src/                    # Code folder
+        │   ├── assets/             # Images
+        │   └── main.tsx            # Entry point
 ```
 
 ---
@@ -50,7 +54,71 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
 
 ## 🧱 Build & Run Locally
 
+### With Docker (Recommended)
+
+Set your database password before starting:
+
+```bash
+export POSTGRES_PASSWORD=replace-with-a-strong-dev-password
+```
+
+When switching between modes, clean up first to avoid stale containers:
+
+```bash
+docker compose down --remove-orphans
+```
+
+#### Development Mode
+
+Starts the full development stack with hot-reload and debugging tools:
+
+- Backend (Development mode with Scalar/OpenAPI)
+- Frontend (Vite dev server with live updates)
+- PostgreSQL database
+- Database explorer (pgweb)
+
+```bash
+docker compose --profile dev up --build
+```
+
+**Available at:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8080
+- Database Explorer: http://localhost:8081
+
+#### Test Mode
+
+Starts only the backend and database for black-box testing:
+
+- Backend (Production mode)
+- PostgreSQL database
+
+```bash
+docker compose --profile test up --build
+```
+
+**Available at:**
+- Backend API: http://localhost:8080
+
+#### Production Mode
+
+Starts the full production stack:
+
+- Backend (Production mode)
+- Frontend (optimized build)
+- PostgreSQL database
+
+```bash
+docker compose --profile prd up --build
+```
+
+**Available at:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080
+
 ### Without Docker
+
+#### Backend
 
 ```bash
 cd src/backend
@@ -59,25 +127,19 @@ dotnet build --configuration Release
 dotnet run --project TikTakToe
 ```
 
-### With Docker Compose
+Backend API will be available at **http://localhost:8080**.
+
+#### Frontend
+
+Development server:
 
 ```bash
-export POSTGRES_PASSWORD=replace-with-a-strong-dev-password
-docker compose up -d --build
+cd src/frontend
+yarn install
+yarn dev
 ```
 
-The API will be available at **http://localhost:8080**.
-
-The database explorer (pgweb) will be available at **http://localhost:8081** by default.
-It auto-connects to the local PostgreSQL container using `POSTGRES_PASSWORD` (or `changeme-dev-only`).
-
-If `POSTGRES_PASSWORD` is not set, Compose defaults to `changeme-dev-only` for local development.
-
-OpenAPI and Scalar documentation endpoints are exposed only in development or when `Features:ExposeApiDocs=true`.
-
-Development defaults are provided via `docker-compose.override.yml`, which Docker Compose applies automatically.
-
-The `frontend` compose service is currently a placeholder container until the frontend app and its Dockerfile are added.
+Frontend will be available at **http://localhost:5173**.
 
 ---
 

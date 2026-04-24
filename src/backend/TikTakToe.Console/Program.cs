@@ -13,7 +13,11 @@ while (true)
     Console.WriteLine("3) HalfDepth");
     Console.WriteLine("4) Opportunity");
     Console.WriteLine("5) Halftunity");
-    Console.Write("Enter choice (1-5, default 1): ");
+    Console.WriteLine("6) Inverse");
+    Console.WriteLine("7) Disconnected");
+    Console.WriteLine("8) Predicament");
+    Console.WriteLine("9) Disconnicament");
+    Console.Write("Enter choice (1-9, default 1): ");
     var engineChoice = Console.ReadLine();
     IEngine engine = engineChoice switch
     {
@@ -21,12 +25,16 @@ while (true)
         "3" => new HalfDepthEngine(),
         "4" => new OpportunityEngine(),
         "5" => new HalftunityEngine(),
+        "6" => new InverseEngine(),
+        "7" => new DisconnectedEngine(),
+        "8" => new PredicamentEngine(),
+        "9" => new DisconnicamentEngine(),
         _ => new RandomEngine()
     };
 
-    // Set depth for minimax-based engines (Classical/HalfDepth)
+    // Set depth for search-based engines (minimax and maxmin variants)
     int? searchDepth = null;
-    if (engine is MinimaxEngineBase)
+    if (engine is MinimaxEngineBase or MaxminEngineBase)
     {
         Console.Write("\nSet search depth (leave blank for full search): ");
         var depthInput = Console.ReadLine();

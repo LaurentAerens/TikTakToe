@@ -6,6 +6,7 @@ namespace TikTakToe.Tests.BlackBox;
 public sealed class BlackBoxComposeFixture : IAsyncLifetime
 {
     private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(2);
+    private const string ComposeBaseArguments = "compose -p tiktaktoe-blackbox -f docker-compose.yml --profile test";
     private readonly string repositoryRoot;
 
     public BlackBoxComposeFixture()
@@ -67,13 +68,26 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
         var startInfo = new ProcessStartInfo
         {
             FileName = "docker",
-            Arguments = $"compose -f docker-compose.yml {arguments}",
+            Arguments = $"{ComposeBaseArguments} {arguments}",
             WorkingDirectory = repositoryRoot,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+
+        // Enable migrations for test profile to ensure database schema is up-to-date
+        // Must copy all existing environment variables and add our override
+        foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            var key = entry.Key?.ToString();
+            var value = entry.Value?.ToString();
+            if (!string.IsNullOrEmpty(key) && value is not null)
+            {
+                startInfo.EnvironmentVariables[key] = value;
+            }
+        }
+        startInfo.EnvironmentVariables["FEATURES__APPLYMIGRATIONSONSTARTUP"] = "true";
 
         using var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Failed to start docker compose process.");

@@ -12,6 +12,26 @@ public class SearchEngineBehaviorTest
         yield return new object[] { new Func<IEngine>(() => new HalfDepthEngine()) };
         yield return new object[] { new Func<IEngine>(() => new OpportunityEngine()) };
         yield return new object[] { new Func<IEngine>(() => new HalftunityEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new InverseEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new DisconnectedEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new PredicamentEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new DisconnicamentEngine()) };
+    }
+
+    public static IEnumerable<object[]> WinningSearchEngineFactories()
+    {
+        yield return new object[] { new Func<IEngine>(() => new ClassicalEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new HalfDepthEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new OpportunityEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new HalftunityEngine()) };
+    }
+
+    public static IEnumerable<object[]> WeakSearchEngineFactories()
+    {
+        yield return new object[] { new Func<IEngine>(() => new InverseEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new DisconnectedEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new PredicamentEngine()) };
+        yield return new object[] { new Func<IEngine>(() => new DisconnicamentEngine()) };
     }
 
     [Theory]
@@ -148,7 +168,7 @@ public class SearchEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(SearchEngineFactories))]
+    [MemberData(nameof(WinningSearchEngineFactories))]
     public void Move_PicksImmediateWin_ForPlayer1(Func<IEngine> factory)
     {
         var engine = factory();
@@ -166,7 +186,7 @@ public class SearchEngineBehaviorTest
     }
 
     [Theory]
-    [MemberData(nameof(SearchEngineFactories))]
+    [MemberData(nameof(WinningSearchEngineFactories))]
     public void Move_PicksImmediateWin_ForPlayer2(Func<IEngine> factory)
     {
         var engine = factory();
@@ -198,5 +218,41 @@ public class SearchEngineBehaviorTest
         var score = engine.Eval(fullBoard, player: 1, depth: 1);
 
         Assert.Equal(0, score);
+    }
+
+    [Theory]
+    [MemberData(nameof(WeakSearchEngineFactories))]
+    public void Move_WeakEngine_DoesNotTakeImmediateWin_ForPlayer1(Func<IEngine> factory)
+    {
+        var engine = factory();
+        var board = new int[3, 3]
+        {
+            { 1, 1, 0 },
+            { 2, 2, 0 },
+            { 0, 0, 0 }
+        };
+
+        var (updatedBoard, score) = engine.Move(board, player: 1);
+
+        Assert.NotEqual(1, updatedBoard[0, 2]);
+        Assert.True(score < 1000);
+    }
+
+    [Theory]
+    [MemberData(nameof(WeakSearchEngineFactories))]
+    public void Move_WeakEngine_DoesNotTakeImmediateWin_ForPlayer2(Func<IEngine> factory)
+    {
+        var engine = factory();
+        var board = new int[3, 3]
+        {
+            { 2, 2, 0 },
+            { 1, 1, 0 },
+            { 0, 0, 0 }
+        };
+
+        var (updatedBoard, score) = engine.Move(board, player: 2);
+
+        Assert.NotEqual(2, updatedBoard[0, 2]);
+        Assert.True(score > -1000);
     }
 }
