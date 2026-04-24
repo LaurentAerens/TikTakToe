@@ -11,24 +11,22 @@ public static class EngineLookupController
         {
             await provider.EnsureCapabilitiesAsync(cancellationToken);
             var capabilities = await provider.ListCapabilitiesAsync(cancellationToken);
-            
-            var tasks = capabilities.Select(capability => 
-                provider.GetSupportedPlayersByIdAsync(capability.Id, cancellationToken)
-                    .ContinueWith(t => new EngineCapabilityDto(
-                        capability.Id,
-                        capability.PlayerId,
-                        capability.DisplayName,
-                        capability.MaxBoardSizeX,
-                        capability.MaxBoardSizeY,
-                        capability.Depth,
-                        t.Result.Order().ToArray()
-                    ), cancellationToken)
-            ).ToArray();
 
-            await Task.WhenAll(tasks);
-            var result = tasks.Select(t => t.Result).ToArray();
+            var result = new List<EngineCapabilityDto>(capabilities.Count);
+            foreach (var capability in capabilities)
+            {
+                var supportedPlayers = await provider.GetSupportedPlayersByIdAsync(capability.Id, cancellationToken);
+                result.Add(new EngineCapabilityDto(
+                    capability.Id,
+                    capability.PlayerId,
+                    capability.DisplayName,
+                    capability.MaxBoardSizeX,
+                    capability.MaxBoardSizeY,
+                    capability.Depth,
+                    supportedPlayers.Order().ToArray()));
+            }
 
-            return Results.Ok(ApiResponse<EngineCapabilityDto[]>.Ok(result));
+            return Results.Ok(ApiResponse<EngineCapabilityDto[]>.Ok(result.ToArray()));
         })
         .WithName("ListEngineCapabilities")
         .WithSummary("Lists all engines and their capabilities");
