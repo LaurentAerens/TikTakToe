@@ -17,5 +17,12 @@ public interface IEngineLookupProvider
 
     Task<IEngine?> CreateEngineByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Creates an engine instance from a pre-fetched capability, avoiding duplicate database lookups.
+    /// </summary>
+    IEngine? CreateEngineFromCapability(EngineCapabilityWithPlayerModel capability);
+
     Task<IEngine?> CreateEngineByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<int>> GetSupportedPlayersByIdAsync(Guid id, CancellationToken cancellationToken = default);
 }

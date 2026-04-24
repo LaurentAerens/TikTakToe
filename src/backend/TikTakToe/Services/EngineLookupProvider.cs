@@ -160,6 +160,16 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
             return null;
         }
 
+        return CreateEngineFromCapability(capability);
+    }
+
+    public IEngine? CreateEngineFromCapability(EngineCapabilityWithPlayerModel capability)
+    {
+        if (capability is null)
+        {
+            return null;
+        }
+
         var registration = Registrations
             .SingleOrDefault(x => EngineDisplayNameNormalizer.Normalize(x.DisplayName) == EngineDisplayNameNormalizer.Normalize(capability.DisplayName));
 
@@ -175,6 +185,19 @@ public sealed class EngineLookupProvider(GameDbContext dbContext) : IEngineLooku
         }
 
         return await CreateEngineByIdAsync(capability.Id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<int>> GetSupportedPlayersByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var capability = await GetByIdAsync(id, cancellationToken);
+        if (capability is null)
+        {
+            return [1, 2];
+        }
+
+        // All current engine implementations use the default IEngine.SupportedPlayers => [1, 2]
+        // This method avoids the N+1 problem of instantiating each engine in the /engines endpoint.
+        return [1, 2];
     }
 
     private static void ValidateUniqueRegistrationDisplayNames()

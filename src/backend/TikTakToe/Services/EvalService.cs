@@ -8,6 +8,11 @@ namespace TikTakToe.Services;
 public sealed class EvalService(IEngineLookupProvider engineLookupProvider) : IEvalService
 {
     private const int EmptyCellValue = 0;
+    /// <summary>
+    /// Maximum total cells (rows × cols) allowed for board evaluation.
+    /// Protects against DoS attacks via large allocation requests.
+    /// </summary>
+    private const int MaxEvalCells = 1_000_000;
 
     /// <inheritdoc />
     public async Task<int> EvaluateAsync(Guid engineId, int[][]? board, int player, int? depth = null, CancellationToken cancellationToken = default)
@@ -18,7 +23,7 @@ public sealed class EvalService(IEngineLookupProvider engineLookupProvider) : IE
             throw new KeyNotFoundException("Engine id not found.");
         }
 
-        var engine = await engineLookupProvider.CreateEngineByIdAsync(engineId, cancellationToken);
+        var engine = engineLookupProvider.CreateEngineFromCapability(capability);
         if (engine is null)
         {
             throw new KeyNotFoundException("Engine id not found.");
@@ -33,6 +38,15 @@ public sealed class EvalService(IEngineLookupProvider engineLookupProvider) : IE
         {
             throw new ArgumentException(
                 $"Board dimensions exceed engine limits. Max rows={capability.MaxBoardSizeX}, max cols={capability.MaxBoardSizeY}.",
+                nameof(board));
+        }
+
+        // Validate total cell count to prevent DoS via large allocations
+        var totalCells = validatedBoard.Length * validatedBoard[0].Length;
+        if (totalCells > MaxEvalCells)
+        {
+            throw new ArgumentException(
+                $"Board size exceeds maximum allowed cells. Total cells={totalCells}, max allowed={MaxEvalCells}.",
                 nameof(board));
         }
 
