@@ -255,4 +255,22 @@ public class SearchEngineBehaviorTest
         Assert.NotEqual(2, updatedBoard[0, 2]);
         Assert.True(score > -1000);
     }
+
+    [Fact]
+    public void Eval_EmptyBoard_WithoutDepth_OpportunityEngine_PerformsFullSearch()
+    {
+        var engine = new OpportunityEngine();
+        var emptyBoard = new int[3, 3]
+        {
+            { 0, 0, 0 },
+            { 0, 0, 0 },
+            { 0, 0, 0 }
+        };
+
+        var scoreWithoutDepth = engine.Eval(emptyBoard, player: 1);
+        var scoreWithFullDepth = engine.Eval(emptyBoard, player: 1, depth: 9);
+
+        Assert.Equal(scoreWithFullDepth, scoreWithoutDepth);
+        Assert.NotEqual(0, scoreWithoutDepth);
+    }
 }
