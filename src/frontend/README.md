@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# TikTakToe — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite frontend for the TikTakToe application.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Prerequisites
 
-## React Compiler
+- [Node.js](https://nodejs.org/) (LTS recommended)
+- [Yarn](https://yarnpkg.com/) package manager
+- A running TikTakToe backend (see the [root README](../../README.md) for setup instructions)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Install dependencies:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Start the development server with hot-module replacement:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+yarn dev
 ```
+
+The frontend will be available at **http://localhost:5173** and proxies API requests to the backend at **http://localhost:8080**.
+
+---
+
+## Available Scripts
+
+| Command         | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `yarn dev`      | Start the Vite development server with HMR.      |
+| `yarn build`    | Compile and bundle for production.               |
+| `yarn preview`  | Preview the production build locally.            |
+| `yarn lint`     | Run ESLint across all source files.              |
+
+---
+
+## Project Structure
+
+```
+src/
+├── assets/         # Static images and icons
+├── App.tsx         # Root application component
+├── App.css         # Root component styles
+├── index.css       # Global styles
+└── main.tsx        # Entry point — mounts the React app
+```
+
+---
+
+## Running with Docker
+
+The frontend is included in the Docker Compose dev and production profiles.
+
+Development (Vite dev server with hot-reload):
+
+```bash
+docker compose --profile dev up --build
+```
+
+Production (optimized static build served by Nginx):
+
+```bash
+docker compose --profile prd up --build
+```
+
+See the [root README](../../README.md) for full Docker usage instructions.
+
