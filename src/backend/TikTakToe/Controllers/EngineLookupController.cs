@@ -11,11 +11,22 @@ public static class EngineLookupController
         {
             await provider.EnsureCapabilitiesAsync(cancellationToken);
             var capabilities = await provider.ListCapabilitiesAsync(cancellationToken);
-            var result = capabilities
-                .Select(x => new EngineCapabilityDto(x.Id, x.PlayerId, x.DisplayName, x.MaxBoardSizeX, x.MaxBoardSizeY, x.Depth))
-                .ToArray();
 
-            return Results.Ok(ApiResponse<EngineCapabilityDto[]>.Ok(result));
+            var result = new List<EngineCapabilityDto>(capabilities.Count);
+            foreach (var capability in capabilities)
+            {
+                var supportedPlayers = await provider.GetSupportedPlayersByIdAsync(capability.Id, cancellationToken);
+                result.Add(new EngineCapabilityDto(
+                    capability.Id,
+                    capability.PlayerId,
+                    capability.DisplayName,
+                    capability.MaxBoardSizeX,
+                    capability.MaxBoardSizeY,
+                    capability.Depth,
+                    supportedPlayers.Order().ToArray()));
+            }
+
+            return Results.Ok(ApiResponse<EngineCapabilityDto[]>.Ok(result.ToArray()));
         })
         .WithName("ListEngineCapabilities")
         .WithSummary("Lists all engines and their capabilities");
@@ -63,6 +74,6 @@ public static class EngineLookupController
         .WithSummary("Converts engine player id to engine id");
     }
 
-    private sealed record EngineCapabilityDto(Guid Id, Guid PlayerId, string DisplayName, int MaxBoardSizeX, int MaxBoardSizeY, bool Depth);
+    private sealed record EngineCapabilityDto(Guid Id, Guid PlayerId, string DisplayName, int MaxBoardSizeX, int MaxBoardSizeY, bool Depth, int[] SupportedPlayers);
     private sealed record EngineIdLookupDto(Guid Id, Guid PlayerId, string DisplayName);
 }

@@ -26,6 +26,7 @@ builder.Services.AddDbContext<GameDbContext>((serviceProvider, options) =>
 	options.UseNpgsql(connectionStringResolver.Resolve());
 });
 builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IEvalService, EvalService>();
 builder.Services.AddScoped<IEngineLookupProvider, EngineLookupProvider>();
 builder.Services.AddOpenApi();
 
@@ -49,6 +50,7 @@ using (var scope = app.Services.CreateScope())
 // Map endpoints
 app.MapHealthController();
 app.MapGameController();
+app.MapEvalController();
 app.MapEngineLookupController();
 if (exposeApiDocs)
 {

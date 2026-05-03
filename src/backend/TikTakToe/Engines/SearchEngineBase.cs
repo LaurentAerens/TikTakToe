@@ -44,13 +44,9 @@ public abstract class SearchEngineBase : IEngine
             throw new BoardSizeNotSupportedException(GetType().Name, board.GetLength(0), board.GetLength(1));
         }
 
-        if (depth.HasValue)
-        {
-            var (_, score) = SearchRecursive(board, player, depth.Value, player);
-            return score;
-        }
-
-        return _boardEvaluator.Evaluate(board);
+        var useDepth = depth ?? CountEmptyCells(board);
+        var (_, score) = SearchRecursive(board, player, useDepth, player);
+        return score;
     }
 
     /// <summary>
@@ -115,7 +111,7 @@ public abstract class SearchEngineBase : IEngine
 
         if (depth == 0)
         {
-            return (board, 0);
+            return (board, score);
         }
 
         var moves = GenerateMoves(board, player);
