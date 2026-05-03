@@ -18,6 +18,8 @@ A .NET web API that plays Tic-Tac-Toe using a suite of pluggable AI engines. Eac
 .
 ├── docker-compose.yml              # Local development compose file
 ├── docs/                           # Extended documentation
+│   ├── api.md                      # Full API reference with request/response examples
+│   ├── configuration.md            # Complete configuration reference
 │   └── engines.md                  # Engine architecture, interfaces & guide
 └── src/
     ├── backend/                    # Backend workspace
@@ -160,19 +162,36 @@ See [docs/engines.md](docs/engines.md) for a full reference of the available AI 
 
 ## 🌐 API Endpoints
 
-| Method | Endpoint   | Description          |
-|--------|------------|----------------------|
-| `GET`  | `/healthz` | Health check         |
-| `GET`  | `/version` | Application version  |
+| Method  | Endpoint                                     | Description                                  |
+|---------|----------------------------------------------|----------------------------------------------|
+| `GET`   | `/healthz`                                   | Health check                                 |
+| `GET`   | `/version`                                   | Application version                          |
+| `POST`  | `/games`                                     | Create a new game                            |
+| `GET`   | `/games/{id}`                                | Get a game by ID                             |
+| `GET`   | `/engines`                                   | List all engine capabilities                 |
+| `GET`   | `/engines/{id}`                              | Get engine details by ID                     |
+| `GET`   | `/engines/{displayName}`                     | Get engine details by display name           |
+| `GET`   | `/engines/resolve-engine-id/{playerId}`      | Convert engine player ID to engine ID        |
+
+See [docs/api.md](docs/api.md) for request/response shapes and worked examples.
 
 ---
 
 ## ⚙️ Configuration
 
-| Environment Variable     | Default | Description                        |
-|--------------------------|---------|------------------------------------|
-| `ASPNETCORE_URLS`        | `http://+:8080` | Listening address          |
-| `ASPNETCORE_ENVIRONMENT` | `Production` | Runtime environment           |
+| Environment Variable              | Default           | Description                                          |
+|-----------------------------------|-------------------|------------------------------------------------------|
+| `ASPNETCORE_URLS`                 | `http://+:8080`   | Listening address                                    |
+| `ASPNETCORE_ENVIRONMENT`          | `Production`      | Runtime environment (`Development` / `Production`)   |
+| `PGHOST`                          | `localhost`       | PostgreSQL host                                      |
+| `PGPORT`                          | `5432`            | PostgreSQL port                                      |
+| `PGDATABASE`                      | `tiktaktoe`       | Database name                                        |
+| `PGUSER`                          | `app_user`        | Database user                                        |
+| `PGPASSWORD`                      | *(required)*      | Database password                                    |
+| `FEATURES__EXPOSEAPIDOCS`         | `false`           | Expose OpenAPI/Scalar UI outside Development mode    |
+| `FEATURES__APPLYMIGRATIONSONSTARTUP` | `false`        | Run EF Core migrations automatically on startup      |
+
+See [docs/configuration.md](docs/configuration.md) for the full configuration reference including Docker Compose shell variables.
 
 ---
 
