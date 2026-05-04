@@ -2,7 +2,7 @@ version: 2
 updates:
   # NuGet package updates
   - package-ecosystem: "nuget"
-    directory: "/src"
+    directory: "/src/backend"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -22,7 +22,9 @@ updates:
 
   # Docker image updates
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/src/backend"
+      - "/src/frontend"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -43,4 +45,18 @@ updates:
       time: "04:00"
     pull-request-branch-name:
       separator: "/"
+    rebase-strategy: "auto"
+
+  # npm/yarn frontend package updates
+  - package-ecosystem: "npm"
+    directory: "/src/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+    pull-request-branch-name:
+      separator: "/"
+    labels:
+      - "dependencies"
+      - "frontend"
     rebase-strategy: "auto"
