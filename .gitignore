@@ -365,3 +365,8 @@ FodyWeavers.xsd
 # Azure Functions local settings (contains secrets)
 local.settings.json
 *dev.bicepparam
+
+# Ingore all github copilot files
+.github/agents/*
+.github/Lessons/*
+.github/Memories/*
