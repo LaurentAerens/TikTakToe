@@ -1,0 +1,9 @@
+{
+  "name": "duplicate-scan-tooling",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lockfile-backed dependencies for duplicate code scanning",
+  "devDependencies": {
+    "jscpd": "4.0.5"
+  }
+}

@@ -6,15 +6,29 @@ on:
     paths:
       - "src/**"
       - ".editorconfig"
+      - ".jscpd.json"
+      - ".github/tools/duplicate-scan/package.json"
+      - ".github/tools/duplicate-scan/package-lock.json"
       - ".github/workflows/code-quality.yml"
   pull_request:
     branches: [ main ]
     paths:
       - "src/**"
       - ".editorconfig"
+      - ".jscpd.json"
+      - ".github/tools/duplicate-scan/package.json"
+      - ".github/tools/duplicate-scan/package-lock.json"
+      - ".github/workflows/code-quality.yml"
 
 env:
   DOTNET_VERSION: '10.0.x'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   codeql:
@@ -32,10 +46,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@d02a7766a1131f2a16daab6a31d328a0b2a47444 # v4.30.8
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
@@ -43,7 +57,7 @@ jobs:
 
       - name: Setup .NET
         if: matrix.language == 'csharp'
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -56,7 +70,7 @@ jobs:
         run: dotnet build --no-restore src/backend/TikTakToe.slnx -c Release
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@d02a7766a1131f2a16daab6a31d328a0b2a47444 # v4.30.8
         with:
           category: "/language:${{ matrix.language }}"
 
@@ -68,13 +82,13 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Semgrep Scan (Docker)
         run: |
           docker run --rm \
             -v "$(pwd):/src" \
-            returntocorp/semgrep:latest \
+            returntocorp/semgrep:1.123.0 \
             semgrep scan /src/src \
               --config=p/csharp \
               --config=p/owasp-top-ten \
@@ -86,10 +100,10 @@ jobs:
               --exclude='**/TestResults/**' \
               --exclude='**/bin/**' \
               --exclude='**/obj/**' \
-              --sarif --output=/src/semgrep-results.sarif || true
+              --sarif --output=/src/semgrep-results.sarif
 
       - name: Upload Semgrep Results
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@d02a7766a1131f2a16daab6a31d328a0b2a47444 # v4.30.8
         with:
           sarif_file: semgrep-results.sarif
         if: always()
@@ -102,10 +116,10 @@ jobs:
       checks: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -127,10 +141,81 @@ jobs:
           echo "StyleCop violations detected. Review build output above."
           exit 1
 
+  duplicate-code-scan:
+    name: Duplicate Code Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.16.0'
+
+      - name: Install duplicate scan tooling
+        run: npm ci --prefix .github/tools/duplicate-scan --ignore-scripts --no-audit --fund false
+
+      - name: Run duplicate scan
+        id: scan
+        shell: bash
+        run: |
+          set +e
+          ./.github/tools/duplicate-scan/node_modules/.bin/jscpd --config .jscpd.json src/backend src/frontend/src
+          SCAN_EXIT_CODE=$?
+
+          echo "scan_exit_code=$SCAN_EXIT_CODE" >> "$GITHUB_OUTPUT"
+
+          if [ "$SCAN_EXIT_CODE" -eq 0 ]; then
+            echo "scan_status=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "scan_status=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+          exit 0
+
+      - name: Publish duplicate scan summary
+        if: always()
+        shell: bash
+        run: |
+          REPORT_FILE=".artifacts/jscpd/jscpd-report.json"
+          echo "## Duplicate Code Scan (jscpd)" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$REPORT_FILE" ]; then
+            DUPLICATION=$(node -p "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8')); (r.statistics?.total?.percentage ?? 0).toFixed(2)")
+            DUP_BLOCKS=$(node -p "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8')); r.statistics?.total?.clones ?? 0")
+            DUP_TOKENS=$(node -p "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8')); r.statistics?.total?.duplicatedTokens ?? 0")
+
+            echo "- Duplication: ${DUPLICATION}%" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Duplicate blocks: ${DUP_BLOCKS}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Duplicated tokens: ${DUP_TOKENS}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- No JSON report was produced. Check step logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload duplicate scan report
+        if: always() && hashFiles('.artifacts/jscpd/**') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: duplicate-code-scan-report
+          path: .artifacts/jscpd
+          retention-days: 14
+
+      - name: Enforce duplicate threshold
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ steps.scan.outputs.scan_exit_code }}" != "0" ]; then
+            echo "Duplicate code threshold exceeded. See uploaded artifact for details."
+            exit 1
+          fi
+
   code-quality-summary:
     name: Code Quality Summary
     runs-on: ubuntu-latest
-    needs: [codeql, semgrep, stylecopanalyzer]
+    needs: [codeql, semgrep, stylecopanalyzer, duplicate-code-scan]
     if: always()
     permissions:
       contents: read
@@ -142,3 +227,24 @@ jobs:
           echo "✓ CodeQL: SAST vulnerability detection"
           echo "✓ Semgrep: Pattern-based code scanning"
           echo "✓ StyleCop: Code style enforcement"
+          echo "✓ jscpd: Duplicate code scanning"
+
+          if [[ "${{ needs.codeql.result }}" != "success" ]]; then
+            echo "❌ CodeQL failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.semgrep.result }}" != "success" ]]; then
+            echo "❌ Semgrep failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.stylecopanalyzer.result }}" != "success" ]]; then
+            echo "❌ StyleCop analyzer failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.duplicate-code-scan.result }}" != "success" ]]; then
+            echo "❌ Duplicate code scan failed"
+            exit 1
+          fi
