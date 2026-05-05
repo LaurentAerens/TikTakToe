@@ -146,6 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -202,6 +203,87 @@ jobs:
           name: duplicate-code-scan-report
           path: .artifacts/jscpd
           retention-days: 14
+
+      - name: Build duplicate scan PR comment body
+        if: always() && github.event_name == 'pull_request'
+        id: pr_comment_body
+        shell: bash
+        run: |
+          REPORT_FILE=".artifacts/jscpd/jscpd-report.json"
+          THRESHOLD="4"
+          STATUS_ICON="✅"
+          STATUS_TEXT="PASS"
+
+          if [ "${{ steps.scan.outputs.scan_exit_code }}" != "0" ]; then
+            STATUS_ICON="❌"
+            STATUS_TEXT="FAIL"
+          fi
+
+          DUPLICATION="N/A"
+          DUP_BLOCKS="N/A"
+          DUP_TOKENS="N/A"
+
+          if [ -f "$REPORT_FILE" ]; then
+            DUPLICATION=$(node -p "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8')); (r.statistics?.total?.percentage ?? 0).toFixed(2)")
+            DUP_BLOCKS=$(node -p "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8')); r.statistics?.total?.clones ?? 0")
+            DUP_TOKENS=$(node -p "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('$REPORT_FILE','utf8')); r.statistics?.total?.duplicatedTokens ?? 0")
+          fi
+
+          {
+            echo 'comment_body<<EOF'
+            echo '<!-- duplicate-code-scan-report -->'
+            echo "## Duplicate Code Scan (jscpd) ${STATUS_ICON} ${STATUS_TEXT}"
+            echo
+            echo "- Duplication: ${DUPLICATION}%"
+            echo "- Duplicate blocks: ${DUP_BLOCKS}"
+            echo "- Duplicated tokens: ${DUP_TOKENS}"
+            echo "- Threshold: ${THRESHOLD}%"
+            echo
+            echo "Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Artifact: duplicate-code-scan-report"
+            echo
+            echo '_This comment is automatically updated on each run._'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upsert duplicate scan PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          COMMENT_BODY: ${{ steps.pr_comment_body.outputs.comment_body }}
+        with:
+          script: |
+            const marker = '<!-- duplicate-code-scan-report -->';
+            const body = process.env.COMMENT_BODY;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(
+              (c) => c.user?.type === 'Bot' && c.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
 
       - name: Enforce duplicate threshold
         if: always()
