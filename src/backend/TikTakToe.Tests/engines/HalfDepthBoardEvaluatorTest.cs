@@ -1,6 +1,6 @@
-using TikTakToe.Engines.Evaluation;
-
 namespace TikTakToe.Tests.Engines;
+
+using TikTakToe.Engines.Evaluation;
 
 public class HalfDepthBoardEvaluatorTest
 {
@@ -12,7 +12,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 1, 1, 1 },
             { 0, 2, 0 },
-            { 2, 0, 0 }
+            { 2, 0, 0 },
         };
 
         var score = evaluator.Evaluate(board);
@@ -28,7 +28,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 2, 2, 2 },
             { 0, 1, 0 },
-            { 1, 0, 0 }
+            { 1, 0, 0 },
         };
 
         var score = evaluator.Evaluate(board);
@@ -44,7 +44,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 1, 1, 0 },
             { 0, 0, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var score = evaluator.Evaluate(board);
@@ -60,7 +60,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 2, 2, 0 },
             { 0, 0, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var score = evaluator.Evaluate(board);
@@ -76,7 +76,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 1, 1, 0 },
             { 1, 1, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var score = evaluator.Evaluate(board);
@@ -92,7 +92,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 0, 1, 0 },
             { 1, 0, 1 },
-            { 0, 1, 0 }
+            { 0, 1, 0 },
         };
 
         var score = evaluator.Evaluate(board);
@@ -108,7 +108,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 1, 1, 0 },
             { 0, 0, 0 },
-            { 1, 1, 0 }
+            { 1, 1, 0 },
         };
 
         var score = evaluator.Evaluate(board);
@@ -124,7 +124,7 @@ public class HalfDepthBoardEvaluatorTest
         {
             { 1, 0, 0 },
             { 0, 2, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var score = evaluator.Evaluate(board);

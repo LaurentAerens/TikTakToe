@@ -1,8 +1,8 @@
+namespace TikTakToe.Tests.Services;
+
 using TikTakToe.Engines.Interface;
 using TikTakToe.Models;
 using TikTakToe.Services;
-
-namespace TikTakToe.Tests.Services;
 
 public sealed class EvalServiceTests
 {
@@ -22,11 +22,14 @@ public sealed class EvalServiceTests
             engine: fakeEngine);
 
         var service = new EvalService(provider);
-        var score = await service.EvaluateAsync(engineId, [
-            [1, 0, 2],
-            [0, 1, 0],
-            [2, 0, 0],
-        ], player: 1);
+        var score = await service.EvaluateAsync(
+            engineId,
+            [
+                [1, 0, 2],
+                [0, 1, 0],
+                [2, 0, 0],
+            ],
+            player: 1);
 
         Assert.Equal(77, score);
         Assert.Equal(1, fakeEngine.LastPlayer);
@@ -58,10 +61,13 @@ public sealed class EvalServiceTests
             },
             engine: new FakeEngine(score: 1, supportedPlayers: [1, 2])));
 
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.EvaluateAsync(engineId, [
-            [0, 0],
-            [1],
-        ], player: 1));
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.EvaluateAsync(
+            engineId,
+            [
+                [0, 0],
+                [1],
+            ],
+            player: 1));
 
         Assert.Contains("equal length", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -80,11 +86,14 @@ public sealed class EvalServiceTests
             },
             engine: new FakeEngine(score: 1, supportedPlayers: [1, 2])));
 
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.EvaluateAsync(engineId, [
-            [0, 0, 0],
-            [0, 1, 0],
-            [2, 0, 0],
-        ], player: 1));
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.EvaluateAsync(
+            engineId,
+            [
+                [0, 0, 0],
+                [0, 1, 0],
+                [2, 0, 0],
+            ],
+            player: 1));
 
         Assert.Contains("exceed engine limits", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -160,11 +169,14 @@ public sealed class EvalServiceTests
             },
             engine: new FakeEngine(score: 1, supportedPlayers: [1, 3])));
 
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.EvaluateAsync(engineId, [
-            [1, 0, 3],
-            [0, 2, 0],
-            [3, 0, 1],
-        ], player: 1));
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.EvaluateAsync(
+            engineId,
+            [
+                [1, 0, 3],
+                [0, 2, 0],
+                [3, 0, 1],
+            ],
+            player: 1));
 
         Assert.Contains("unsupported player value", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -262,9 +274,9 @@ public sealed class EvalServiceTests
 
         public int Eval(int[,] board, int player, int? depth = null)
         {
-            LastBoard = board;
-            LastPlayer = player;
-            LastDepth = depth;
+            this.LastBoard = board;
+            this.LastPlayer = player;
+            this.LastDepth = depth;
             return score;
         }
     }

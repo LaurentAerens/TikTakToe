@@ -1,6 +1,6 @@
-using TikTakToe.Engines.Evaluation;
-
 namespace TikTakToe.Engines;
+
+using TikTakToe.Engines.Evaluation;
 
 /// <summary>
 /// Inverse engine for 3x3 Tic-Tac-Toe.
@@ -8,7 +8,8 @@ namespace TikTakToe.Engines;
 /// </summary>
 public sealed class InverseEngine : MaxminEngineBase
 {
-    public InverseEngine() : base(new ClassicalBoardEvaluator())
+    public InverseEngine()
+        : base(new ClassicalBoardEvaluator())
     {
     }
 }

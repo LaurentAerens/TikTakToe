@@ -1,7 +1,7 @@
+namespace TikTakToe.Engines;
+
 using TikTakToe.Engines.Evaluation;
 using TikTakToe.Engines.Search;
-
-namespace TikTakToe.Engines;
 
 /// <summary>
 /// Disconnicament engine using half-depth evaluation.
@@ -9,7 +9,8 @@ namespace TikTakToe.Engines;
 /// </summary>
 public sealed class DisconnicamentEngine : MaxminEngineBase
 {
-    public DisconnicamentEngine() : base(new HalfDepthBoardEvaluator(), new MaxminOpportunityOpponentStrategy())
+    public DisconnicamentEngine()
+        : base(new HalfDepthBoardEvaluator(), new MaxminOpportunityOpponentStrategy())
     {
     }
 }

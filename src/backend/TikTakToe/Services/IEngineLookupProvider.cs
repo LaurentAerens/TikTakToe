@@ -1,7 +1,7 @@
+namespace TikTakToe.Services;
+
 using TikTakToe.Engines.Interface;
 using TikTakToe.Models;
-
-namespace TikTakToe.Services;
 
 public interface IEngineLookupProvider
 {
@@ -20,6 +20,7 @@ public interface IEngineLookupProvider
     /// <summary>
     /// Creates an engine instance from a pre-fetched capability, avoiding duplicate database lookups.
     /// </summary>
+    /// <returns></returns>
     IEngine? CreateEngineFromCapability(EngineCapabilityWithPlayerModel capability);
 
     Task<IEngine?> CreateEngineByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default);
