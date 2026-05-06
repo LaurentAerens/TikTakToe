@@ -5,6 +5,7 @@ Extended documentation lives in this directory.
 ## Available docs
 
 - [`engines.md`](engines.md) — engine architecture, interfaces, available implementations, and a guide on creating a new engine
+- [`../CONTRIBUTING.md`](../CONTRIBUTING.md) — contribution workflow, including local backend StyleCop strict/audit commands
 
 ## Suggested additions
 
