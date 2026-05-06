@@ -1,37 +1,85 @@
+namespace TikTakToe.Tests.Engines;
+
 using TikTakToe.Engines;
 using TikTakToe.Engines.Exceptions;
 using TikTakToe.Engines.Interface;
-
-namespace TikTakToe.Tests.Engines;
 
 public class SearchEngineBehaviorTest
 {
     public static IEnumerable<object[]> SearchEngineFactories()
     {
-        yield return new object[] { new Func<IEngine>(() => new ClassicalEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new HalfDepthEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new OpportunityEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new HalftunityEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new InverseEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new DisconnectedEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new PredicamentEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new DisconnicamentEngine()) };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new ClassicalEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new HalfDepthEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new OpportunityEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new HalftunityEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new InverseEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new DisconnectedEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new PredicamentEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new DisconnicamentEngine()),
+        };
     }
 
     public static IEnumerable<object[]> WinningSearchEngineFactories()
     {
-        yield return new object[] { new Func<IEngine>(() => new ClassicalEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new HalfDepthEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new OpportunityEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new HalftunityEngine()) };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new ClassicalEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new HalfDepthEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new OpportunityEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new HalftunityEngine()),
+        };
     }
 
     public static IEnumerable<object[]> WeakSearchEngineFactories()
     {
-        yield return new object[] { new Func<IEngine>(() => new InverseEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new DisconnectedEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new PredicamentEngine()) };
-        yield return new object[] { new Func<IEngine>(() => new DisconnicamentEngine()) };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new InverseEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new DisconnectedEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new PredicamentEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new DisconnicamentEngine()),
+        };
     }
 
     [Theory]
@@ -43,7 +91,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 0, 0 },
             { 0, 2, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var score = engine.Eval(board, player: 1, depth: 0);
@@ -60,7 +108,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 1, 0 },
             { 2, 1, 2 },
-            { 2, 0, 0 }
+            { 2, 0, 0 },
         };
 
         var remaining = 0;
@@ -90,7 +138,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 1, 0 },
             { 2, 1, 2 },
-            { 2, 0, 0 }
+            { 2, 0, 0 },
         };
 
         var score = engine.Eval(board, player: 1);
@@ -108,7 +156,7 @@ public class SearchEngineBehaviorTest
             { 1, 2, 1, 2 },
             { 2, 1, 0, 1 },
             { 1, 2, 2, 1 },
-            { 2, 1, 1, 2 }
+            { 2, 1, 1, 2 },
         };
 
         var ex = Record.Exception(() => engine.Eval(board, player: 1));
@@ -126,7 +174,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 2, 1 },
             { 2, 1, 2 },
-            { 2, 1, 2 }
+            { 2, 1, 2 },
         };
 
         var ex = Record.Exception(() => engine.Move(fullBoard, player: 1));
@@ -144,7 +192,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 2, 1 },
             { 2, 1, 2 },
-            { 2, 1, 0 }
+            { 2, 1, 0 },
         };
 
         var (updatedBoard, score) = engine.Move(board, player: 2);
@@ -176,7 +224,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 1, 0 },
             { 2, 2, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var (updatedBoard, score) = engine.Move(board, player: 1);
@@ -194,7 +242,7 @@ public class SearchEngineBehaviorTest
         {
             { 2, 2, 0 },
             { 1, 1, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var (updatedBoard, score) = engine.Move(board, player: 2);
@@ -212,7 +260,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 2, 1 },
             { 2, 1, 2 },
-            { 2, 1, 2 }
+            { 2, 1, 2 },
         };
 
         var score = engine.Eval(fullBoard, player: 1, depth: 1);
@@ -229,7 +277,7 @@ public class SearchEngineBehaviorTest
         {
             { 1, 1, 0 },
             { 2, 2, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var (updatedBoard, score) = engine.Move(board, player: 1);
@@ -247,7 +295,7 @@ public class SearchEngineBehaviorTest
         {
             { 2, 2, 0 },
             { 1, 1, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var (updatedBoard, score) = engine.Move(board, player: 2);
@@ -264,7 +312,7 @@ public class SearchEngineBehaviorTest
         {
             { 0, 0, 0 },
             { 0, 0, 0 },
-            { 0, 0, 0 }
+            { 0, 0, 0 },
         };
 
         var scoreWithoutDepth = engine.Eval(emptyBoard, player: 1);

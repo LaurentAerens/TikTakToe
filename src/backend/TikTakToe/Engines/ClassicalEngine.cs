@@ -1,6 +1,6 @@
-using TikTakToe.Engines.Evaluation;
-
 namespace TikTakToe.Engines;
+
+using TikTakToe.Engines.Evaluation;
 
 /// <summary>
 /// Classical minimax engine for 3x3 Tic-Tac-Toe.
@@ -10,7 +10,8 @@ namespace TikTakToe.Engines;
 /// </summary>
 public sealed class ClassicalEngine : MinimaxEngineBase
 {
-    public ClassicalEngine() : base(new ClassicalBoardEvaluator())
+    public ClassicalEngine()
+        : base(new ClassicalBoardEvaluator())
     {
     }
 }

@@ -1,6 +1,6 @@
-using TikTakToe.Engines.Exceptions;
-
 namespace TikTakToe.Services;
+
+using TikTakToe.Engines.Exceptions;
 
 /// <summary>
 /// Default implementation for board evaluation orchestration.
@@ -8,6 +8,7 @@ namespace TikTakToe.Services;
 public sealed class EvalService(IEngineLookupProvider engineLookupProvider) : IEvalService
 {
     private const int EmptyCellValue = 0;
+
     /// <summary>
     /// Maximum total cells (rows × cols) allowed for board evaluation.
     /// Protects against DoS attacks via large allocation requests.

@@ -1,10 +1,10 @@
+namespace TikTakToe.Data;
+
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using System.Text.Json;
 using TikTakToe.Models;
-
-namespace TikTakToe.Data;
 
 /// <summary>
 /// Entity Framework database context for game persistence.
@@ -21,24 +21,42 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         board => CloneBoard(board));
 
     /// <summary>
-    /// Gets or sets games.
+    /// Gets games.
     /// </summary>
-    public DbSet<GameModel> Games => Set<GameModel>();
+    public DbSet<GameModel> Games => this.Set<GameModel>();
 
     /// <summary>
-    /// Gets or sets players.
+    /// Gets players.
     /// </summary>
-    public DbSet<PlayerModel> Players => Set<PlayerModel>();
+    public DbSet<PlayerModel> Players => this.Set<PlayerModel>();
 
     /// <summary>
-    /// Gets or sets moves.
+    /// Gets moves.
     /// </summary>
-    public DbSet<MoveModel> Moves => Set<MoveModel>();
+    public DbSet<MoveModel> Moves => this.Set<MoveModel>();
 
     /// <summary>
-    /// Gets or sets engine capabilities.
+    /// Gets engine capabilities.
     /// </summary>
-    public DbSet<EngineCapabilityModel> EngineCapabilities => Set<EngineCapabilityModel>();
+    public DbSet<EngineCapabilityModel> EngineCapabilities => this.Set<EngineCapabilityModel>();
+
+    /// <inheritdoc />
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        this.PrepareEngineCapabilities();
+        this.ValidateEngineCapabilityUniqueness();
+        this.ValidateEnginePlayerMappings();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    /// <inheritdoc />
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        this.PrepareEngineCapabilities();
+        await this.ValidateEngineCapabilityUniquenessAsync(cancellationToken);
+        await this.ValidateEnginePlayerMappingsAsync(cancellationToken);
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -55,7 +73,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         boardProperty.SetValueComparer(BoardComparer);
 
         game.Property(x => x.Board).HasColumnName("board");
-        if (Database.IsNpgsql())
+        if (this.Database.IsNpgsql())
         {
             game.Property(x => x.Board)
                 .HasColumnType("jsonb");
@@ -109,228 +127,6 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         engineCapability.HasIndex(x => x.DisplayName).IsUnique();
         engineCapability.HasIndex(x => x.NormalizedDisplayName).IsUnique();
     }
-
-    /// <inheritdoc />
-    public override int SaveChanges(bool acceptAllChangesOnSuccess)
-    {
-        PrepareEngineCapabilities();
-        ValidateEngineCapabilityUniqueness();
-        ValidateEnginePlayerMappings();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
-    }
-
-    /// <inheritdoc />
-    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
-    {
-        PrepareEngineCapabilities();
-        await ValidateEngineCapabilityUniquenessAsync(cancellationToken);
-        await ValidateEnginePlayerMappingsAsync(cancellationToken);
-        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-    }
-
-    private void PrepareEngineCapabilities()
-    {
-        var entries = ChangeTracker.Entries<EngineCapabilityModel>()
-            .Where(x => x.State is EntityState.Added or EntityState.Modified)
-            .ToArray();
-
-        foreach (var entry in entries)
-        {
-            entry.Entity.NormalizedDisplayName = EngineDisplayNameNormalizer.Normalize(entry.Entity.DisplayName);
-        }
-    }
-
-    private void ValidateEngineCapabilityUniqueness()
-    {
-        var candidates = ChangeTracker.Entries<EngineCapabilityModel>()
-            .Where(x => x.State is EntityState.Added or EntityState.Modified)
-            .Select(x => x.Entity)
-            .ToArray();
-
-        ValidateDuplicateCandidates(candidates);
-        if (candidates.Length == 0)
-        {
-            return;
-        }
-
-        var normalizedNames = candidates
-            .Select(x => x.NormalizedDisplayName)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
-        var existing = EngineCapabilities
-            .AsNoTracking()
-            .Where(x => normalizedNames.Contains(x.NormalizedDisplayName))
-            .Select(x => new ExistingEngineCapability(x.Id, x.NormalizedDisplayName))
-            .ToList();
-
-        ValidateAgainstExisting(candidates, existing);
-    }
-
-    private async Task ValidateEngineCapabilityUniquenessAsync(CancellationToken cancellationToken)
-    {
-        var candidates = ChangeTracker.Entries<EngineCapabilityModel>()
-            .Where(x => x.State is EntityState.Added or EntityState.Modified)
-            .Select(x => x.Entity)
-            .ToArray();
-
-        ValidateDuplicateCandidates(candidates);
-        if (candidates.Length == 0)
-        {
-            return;
-        }
-
-        var normalizedNames = candidates
-            .Select(x => x.NormalizedDisplayName)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
-        var existing = await EngineCapabilities
-            .AsNoTracking()
-            .Where(x => normalizedNames.Contains(x.NormalizedDisplayName))
-            .Select(x => new ExistingEngineCapability(x.Id, x.NormalizedDisplayName))
-            .ToListAsync(cancellationToken);
-
-        ValidateAgainstExisting(candidates, existing);
-    }
-
-    private static void ValidateDuplicateCandidates(EngineCapabilityModel[] candidates)
-    {
-        var duplicateInCandidates = candidates
-            .GroupBy(x => x.NormalizedDisplayName ?? string.Empty, StringComparer.Ordinal)
-            .FirstOrDefault(group => group.Select(x => x.Id).Distinct().Count() > 1);
-
-        if (duplicateInCandidates is not null)
-        {
-            throw new InvalidOperationException($"An engine with display name '{duplicateInCandidates.Key}' already exists under normalization rules.");
-        }
-    }
-
-    private static void ValidateAgainstExisting(
-        IEnumerable<EngineCapabilityModel> candidates,
-        IEnumerable<ExistingEngineCapability> existing)
-    {
-        var existingByName = existing
-            .GroupBy(x => x.NormalizedDisplayName ?? string.Empty, StringComparer.Ordinal)
-            .ToDictionary(x => x.Key, x => x.Select(y => y.Id).ToHashSet(), StringComparer.Ordinal);
-
-        foreach (var candidate in candidates)
-        {
-            var candidateKey = candidate.NormalizedDisplayName ?? string.Empty;
-            if (existingByName.TryGetValue(candidateKey, out var ids)
-                && !ids.Contains(candidate.Id))
-            {
-                throw new InvalidOperationException($"An engine with display name '{candidate.DisplayName}' already exists under normalization rules.");
-            }
-        }
-    }
-
-    private void ValidateEnginePlayerMappings()
-    {
-        var engineCandidates = ChangeTracker.Entries<PlayerModel>()
-            .Where(x => x.State is EntityState.Added or EntityState.Modified)
-            .Select(x => x.Entity)
-            .Where(x => x.IsEngine && x.GameId is null)
-            .ToArray();
-
-        ValidateEnginePlayerCandidateShape(engineCandidates);
-        if (engineCandidates.Length == 0)
-        {
-            return;
-        }
-
-        var engineExternalIds = engineCandidates
-            .Select(x => NormalizeEngineExternalId(x.ExternalId))
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
-        var existing = Players
-            .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
-            .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
-            .ToList();
-
-        ValidateEnginePlayersAgainstExisting(engineCandidates, existing);
-    }
-
-    private async Task ValidateEnginePlayerMappingsAsync(CancellationToken cancellationToken)
-    {
-        var engineCandidates = ChangeTracker.Entries<PlayerModel>()
-            .Where(x => x.State is EntityState.Added or EntityState.Modified)
-            .Select(x => x.Entity)
-            .Where(x => x.IsEngine && x.GameId is null)
-            .ToArray();
-
-        ValidateEnginePlayerCandidateShape(engineCandidates);
-        if (engineCandidates.Length == 0)
-        {
-            return;
-        }
-
-        var engineExternalIds = engineCandidates
-            .Select(x => NormalizeEngineExternalId(x.ExternalId))
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-
-        var existing = await Players
-            .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
-            .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
-            .ToListAsync(cancellationToken);
-
-        ValidateEnginePlayersAgainstExisting(engineCandidates, existing);
-    }
-
-    private static void ValidateEnginePlayerCandidateShape(PlayerModel[] engineCandidates)
-    {
-        foreach (var candidate in engineCandidates)
-        {
-            if (!Guid.TryParse(candidate.ExternalId, out var parsed))
-            {
-                throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
-            }
-
-            candidate.ExternalId = parsed.ToString("D");
-        }
-
-        var duplicateCandidate = engineCandidates
-            .GroupBy(x => x.ExternalId!, StringComparer.Ordinal)
-            .FirstOrDefault(group => group.Select(x => x.Id).Distinct().Count() > 1);
-
-        if (duplicateCandidate is not null)
-        {
-            throw new InvalidOperationException($"An engine player with ExternalId '{duplicateCandidate.Key}' already exists.");
-        }
-    }
-
-    private static void ValidateEnginePlayersAgainstExisting(
-        IEnumerable<PlayerModel> candidates,
-        IEnumerable<ExistingEnginePlayer> existing)
-    {
-        var existingByExternalId = existing
-            .GroupBy(x => x.ExternalId, StringComparer.Ordinal)
-            .ToDictionary(x => x.Key, x => x.Select(y => y.Id).ToHashSet(), StringComparer.Ordinal);
-
-        foreach (var candidate in candidates)
-        {
-            var normalizedExternalId = NormalizeEngineExternalId(candidate.ExternalId);
-            if (existingByExternalId.TryGetValue(normalizedExternalId, out var ids)
-                && !ids.Contains(candidate.Id))
-            {
-                throw new InvalidOperationException($"An engine player with ExternalId '{normalizedExternalId}' already exists.");
-            }
-        }
-    }
-
-    private static string NormalizeEngineExternalId(string? externalId)
-    {
-        return Guid.TryParse(externalId, out var parsed)
-            ? parsed.ToString("D")
-            : throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
-    }
-
-    private sealed record ExistingEngineCapability(Guid Id, string? NormalizedDisplayName);
-    private sealed record ExistingEnginePlayer(Guid Id, string ExternalId);
 
     private static string? SerializeBoard(int[,]? board)
     {
@@ -439,7 +235,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
             return 0;
         }
 
-        var hash = new HashCode();
+        var hash = default(HashCode);
         hash.Add(board.GetLength(0));
         hash.Add(board.GetLength(1));
 
@@ -453,4 +249,209 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
 
         return hash.ToHashCode();
     }
+
+    private static void ValidateDuplicateCandidates(EngineCapabilityModel[] candidates)
+    {
+        var duplicateInCandidates = candidates
+            .GroupBy(x => x.NormalizedDisplayName ?? string.Empty, StringComparer.Ordinal)
+            .FirstOrDefault(group => group.Select(x => x.Id).Distinct().Count() > 1);
+
+        if (duplicateInCandidates is not null)
+        {
+            throw new InvalidOperationException($"An engine with display name '{duplicateInCandidates.Key}' already exists under normalization rules.");
+        }
+    }
+
+    private static void ValidateAgainstExisting(
+        IEnumerable<EngineCapabilityModel> candidates,
+        IEnumerable<ExistingEngineCapability> existing)
+    {
+        var existingByName = existing
+            .GroupBy(x => x.NormalizedDisplayName ?? string.Empty, StringComparer.Ordinal)
+            .ToDictionary(x => x.Key, x => x.Select(y => y.Id).ToHashSet(), StringComparer.Ordinal);
+
+        foreach (var candidate in candidates)
+        {
+            var candidateKey = candidate.NormalizedDisplayName ?? string.Empty;
+            if (existingByName.TryGetValue(candidateKey, out var ids)
+                && !ids.Contains(candidate.Id))
+            {
+                throw new InvalidOperationException($"An engine with display name '{candidate.DisplayName}' already exists under normalization rules.");
+            }
+        }
+    }
+
+    private static void ValidateEnginePlayerCandidateShape(PlayerModel[] engineCandidates)
+    {
+        foreach (var candidate in engineCandidates)
+        {
+            if (!Guid.TryParse(candidate.ExternalId, out var parsed))
+            {
+                throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
+            }
+
+            candidate.ExternalId = parsed.ToString("D");
+        }
+
+        var duplicateCandidate = engineCandidates
+            .GroupBy(x => x.ExternalId!, StringComparer.Ordinal)
+            .FirstOrDefault(group => group.Select(x => x.Id).Distinct().Count() > 1);
+
+        if (duplicateCandidate is not null)
+        {
+            throw new InvalidOperationException($"An engine player with ExternalId '{duplicateCandidate.Key}' already exists.");
+        }
+    }
+
+    private static void ValidateEnginePlayersAgainstExisting(
+        IEnumerable<PlayerModel> candidates,
+        IEnumerable<ExistingEnginePlayer> existing)
+    {
+        var existingByExternalId = existing
+            .GroupBy(x => x.ExternalId, StringComparer.Ordinal)
+            .ToDictionary(x => x.Key, x => x.Select(y => y.Id).ToHashSet(), StringComparer.Ordinal);
+
+        foreach (var candidate in candidates)
+        {
+            var normalizedExternalId = NormalizeEngineExternalId(candidate.ExternalId);
+            if (existingByExternalId.TryGetValue(normalizedExternalId, out var ids)
+                && !ids.Contains(candidate.Id))
+            {
+                throw new InvalidOperationException($"An engine player with ExternalId '{normalizedExternalId}' already exists.");
+            }
+        }
+    }
+
+    private static string NormalizeEngineExternalId(string? externalId)
+    {
+        return Guid.TryParse(externalId, out var parsed)
+            ? parsed.ToString("D")
+            : throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
+    }
+
+    private void PrepareEngineCapabilities()
+    {
+        var entries = this.ChangeTracker.Entries<EngineCapabilityModel>()
+            .Where(x => x.State is EntityState.Added or EntityState.Modified)
+            .ToArray();
+
+        foreach (var entry in entries)
+        {
+            entry.Entity.NormalizedDisplayName = EngineDisplayNameNormalizer.Normalize(entry.Entity.DisplayName);
+        }
+    }
+
+    private void ValidateEngineCapabilityUniqueness()
+    {
+        var candidates = this.ChangeTracker.Entries<EngineCapabilityModel>()
+            .Where(x => x.State is EntityState.Added or EntityState.Modified)
+            .Select(x => x.Entity)
+            .ToArray();
+
+        ValidateDuplicateCandidates(candidates);
+        if (candidates.Length == 0)
+        {
+            return;
+        }
+
+        var normalizedNames = candidates
+            .Select(x => x.NormalizedDisplayName)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var existing = this.EngineCapabilities
+            .AsNoTracking()
+            .Where(x => normalizedNames.Contains(x.NormalizedDisplayName))
+            .Select(x => new ExistingEngineCapability(x.Id, x.NormalizedDisplayName))
+            .ToList();
+
+        ValidateAgainstExisting(candidates, existing);
+    }
+
+    private async Task ValidateEngineCapabilityUniquenessAsync(CancellationToken cancellationToken)
+    {
+        var candidates = this.ChangeTracker.Entries<EngineCapabilityModel>()
+            .Where(x => x.State is EntityState.Added or EntityState.Modified)
+            .Select(x => x.Entity)
+            .ToArray();
+
+        ValidateDuplicateCandidates(candidates);
+        if (candidates.Length == 0)
+        {
+            return;
+        }
+
+        var normalizedNames = candidates
+            .Select(x => x.NormalizedDisplayName)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var existing = await this.EngineCapabilities
+            .AsNoTracking()
+            .Where(x => normalizedNames.Contains(x.NormalizedDisplayName))
+            .Select(x => new ExistingEngineCapability(x.Id, x.NormalizedDisplayName))
+            .ToListAsync(cancellationToken);
+
+        ValidateAgainstExisting(candidates, existing);
+    }
+
+    private void ValidateEnginePlayerMappings()
+    {
+        var engineCandidates = this.ChangeTracker.Entries<PlayerModel>()
+            .Where(x => x.State is EntityState.Added or EntityState.Modified)
+            .Select(x => x.Entity)
+            .Where(x => x.IsEngine && x.GameId is null)
+            .ToArray();
+
+        ValidateEnginePlayerCandidateShape(engineCandidates);
+        if (engineCandidates.Length == 0)
+        {
+            return;
+        }
+
+        var engineExternalIds = engineCandidates
+            .Select(x => NormalizeEngineExternalId(x.ExternalId))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var existing = this.Players
+            .AsNoTracking()
+            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
+            .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
+            .ToList();
+
+        ValidateEnginePlayersAgainstExisting(engineCandidates, existing);
+    }
+
+    private async Task ValidateEnginePlayerMappingsAsync(CancellationToken cancellationToken)
+    {
+        var engineCandidates = this.ChangeTracker.Entries<PlayerModel>()
+            .Where(x => x.State is EntityState.Added or EntityState.Modified)
+            .Select(x => x.Entity)
+            .Where(x => x.IsEngine && x.GameId is null)
+            .ToArray();
+
+        ValidateEnginePlayerCandidateShape(engineCandidates);
+        if (engineCandidates.Length == 0)
+        {
+            return;
+        }
+
+        var engineExternalIds = engineCandidates
+            .Select(x => NormalizeEngineExternalId(x.ExternalId))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var existing = await this.Players
+            .AsNoTracking()
+            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
+            .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
+            .ToListAsync(cancellationToken);
+
+        ValidateEnginePlayersAgainstExisting(engineCandidates, existing);
+    }
+
+    private sealed record ExistingEngineCapability(Guid Id, string? NormalizedDisplayName);
+
+    private sealed record ExistingEnginePlayer(Guid Id, string ExternalId);
 }

@@ -1,7 +1,7 @@
+namespace TikTakToe.Tests;
+
 using TikTakToe.Engines.Exceptions;
 using TikTakToe.Engines.Interface;
-
-namespace TikTakToe.Tests;
 
 public class EngineContractTests
 {
@@ -31,7 +31,7 @@ public class EngineContractTests
         {
             { 1, 2, 0 },
             { 0, 1, 2 },
-            { 2, 0, 1 }
+            { 2, 0, 1 },
         };
 
         var (updatedBoard, score) = engine.Move(board, player);
@@ -66,7 +66,7 @@ public class EngineContractTests
         {
             { 1, 2, 0 },
             { 0, 1, 2 },
-            { 2, 0, 1 }
+            { 2, 0, 1 },
         };
 
         var score = engine.Eval(board, player: 1);
@@ -83,7 +83,7 @@ public class EngineContractTests
         {
             { 1, 2, 1 },
             { 2, 1, 2 },
-            { 2, 1, 2 }
+            { 2, 1, 2 },
         };
 
         var ex = Record.Exception(() => engine.Move(fullBoard, player: 1));
@@ -101,7 +101,7 @@ public class EngineContractTests
         {
             { 1, 2, 0 },
             { 0, 1, 2 },
-            { 2, 0, 1 }
+            { 2, 0, 1 },
         };
 
         try
@@ -125,7 +125,7 @@ public class EngineContractTests
         {
             { 1, 2, 0 },
             { 0, 1, 2 },
-            { 2, 0, 1 }
+            { 2, 0, 1 },
         };
 
         try
@@ -166,7 +166,7 @@ public class EngineContractTests
             { 1, 2, 1, 2 },
             { 2, 1, 0, 1 },
             { 1, 2, 2, 1 },
-            { 2, 1, 1, 2 }
+            { 2, 1, 1, 2 },
         };
 
         try

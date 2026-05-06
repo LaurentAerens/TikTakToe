@@ -118,12 +118,13 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          # Keep this curated blocker list synchronized with CONTRIBUTING.md strict check.
+          # Severity is controlled exclusively via .editorconfig.
+          # Rules set to 'warning' become errors via TreatWarningsAsErrors=true.
+          # Rules set to 'suggestion' or 'none' are advisory only and never block CI.
           dotnet build src/backend/TikTakToe.slnx \
             -c Release \
             -p:EnforceCodeStyleInBuild=true \
-            -p:TreatWarningsAsErrors=false \
-            -p:WarningsAsErrors="SA1000;SA1001;SA1002;SA1005;SA1008;SA1009;SA1011;SA1018;SA1019;SA1025;SA1028;SA1100;SA1106;SA1108;SA1110;SA1111;SA1115;SA1116;SA1117;SA1127;SA1128;SA1649" \
+            -p:TreatWarningsAsErrors=true \
             --no-restore \
             --verbosity normal 2>&1 | tee build-output.log
 

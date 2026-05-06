@@ -1,7 +1,7 @@
+namespace TikTakToe.Engines;
+
 using TikTakToe.Engines.Evaluation;
 using TikTakToe.Engines.Search;
-
-namespace TikTakToe.Engines;
 
 /// <summary>
 /// Opportunity engine using classical (terminal-only) evaluation.
@@ -9,7 +9,8 @@ namespace TikTakToe.Engines;
 /// </summary>
 public sealed class OpportunityEngine : MinimaxEngineBase
 {
-    public OpportunityEngine() : base(new ClassicalBoardEvaluator(), new OpportunityOpponentStrategy())
+    public OpportunityEngine()
+        : base(new ClassicalBoardEvaluator(), new OpportunityOpponentStrategy())
     {
     }
 }

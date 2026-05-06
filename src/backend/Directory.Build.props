@@ -1,5 +1,13 @@
 <Project>
+  <PropertyGroup>
+    <!-- Suppress SA1309: Private fields with underscores are handled by EditorConfig naming conventions -->
+    <NoWarn>SA1309</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <!-- StyleCop.Analyzers.Unstable is the stable-versioned release of the 1.2.0 series,
+         which adds support for C# 9+ records and other modern language features.
+         The 1.1.x stable branch crashes on RecordDeclaration (AD0001 / SA1201). -->
+    <PackageReference Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
   </ItemGroup>
 </Project>

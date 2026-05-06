@@ -12,5 +12,6 @@ public interface IOpponentStrategy
     /// <param name="scores">Scores of all legal moves at this node.</param>
     /// <param name="currentPlayer">The player moving at this node (1 or 2).</param>
     /// <param name="enginePlayer">The player the engine is playing as (constant throughout the search).</param>
+    /// <returns></returns>
     int AggregateScores(IReadOnlyList<int> scores, int currentPlayer, int enginePlayer);
 }

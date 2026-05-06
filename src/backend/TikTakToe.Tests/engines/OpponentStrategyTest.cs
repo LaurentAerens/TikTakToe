@@ -1,6 +1,6 @@
-using TikTakToe.Engines.Search;
-
 namespace TikTakToe.Tests.Engines;
+
+using TikTakToe.Engines.Search;
 
 public class OpponentStrategyTest
 {

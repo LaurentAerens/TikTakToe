@@ -1,7 +1,7 @@
+namespace TikTakToe.Data;
+
 using Microsoft.Extensions.Options;
 using Npgsql;
-
-namespace TikTakToe.Data;
 
 /// <summary>
 /// Resolves PostgreSQL connection details from application configuration.
