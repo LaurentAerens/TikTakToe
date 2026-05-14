@@ -1,0 +1,27 @@
+{
+  "pattern": "**/*.{cs,ts,tsx,js}",
+  "ignore": [
+    "**/bin/**",
+    "**/obj/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/TestResults/**",
+    "**/*.Tests/**",
+    "**/Migrations/**",
+    "**/Generated/**",
+    "**/*.generated.*",
+    "**/*.g.cs"
+  ],
+  "threshold": 4,
+  "minLines": 6,
+  "minTokens": 70,
+  "reporters": [
+    "console",
+    "json",
+    "markdown"
+  ],
+  "output": ".artifacts/jscpd",
+  "verbose": false,
+  "silent": false
+}
