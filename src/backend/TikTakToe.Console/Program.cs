@@ -1,6 +1,6 @@
-﻿using TikTakToe.Engines;
-using TikTakToe.Engines.Interface;
+using TikTakToe.Engines;
 using TikTakToe.Engines.Exceptions;
+using TikTakToe.Engines.Interface;
 
 Console.WriteLine("=== TikTakToe vs Engine ===\n");
 
@@ -29,7 +29,7 @@ while (true)
         "7" => new DisconnectedEngine(),
         "8" => new PredicamentEngine(),
         "9" => new DisconnicamentEngine(),
-        _ => new RandomEngine()
+        _ => new RandomEngine(),
     };
 
     // Set depth for search-based engines (minimax and maxmin variants)
@@ -50,7 +50,12 @@ while (true)
     }
 
     // New fresh board for each game
-    var board = new int[3, 3] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+    var board = new int[3, 3]
+    {
+        { 0, 0, 0 },
+        { 0, 0, 0 },
+        { 0, 0, 0 },
+    };
 
     // Player selection
     Console.WriteLine("\nChoose your player:");
@@ -101,6 +106,7 @@ while (true)
                     Console.WriteLine("Invalid position. Use 0-8 or row,col\n");
                     continue;
                 }
+
                 row = pos / 3;
                 col = pos % 3;
             }
@@ -171,6 +177,7 @@ while (true)
     {
         break;
     }
+
     Console.WriteLine();
 }
 
@@ -178,17 +185,32 @@ bool CheckWin(int[,] b, int player)
 {
     // Check rows
     for (var i = 0; i < 3; i++)
+    {
         if (b[i, 0] == player && b[i, 1] == player && b[i, 2] == player)
+        {
             return true;
+        }
+    }
 
     // Check columns
     for (var j = 0; j < 3; j++)
+    {
         if (b[0, j] == player && b[1, j] == player && b[2, j] == player)
+        {
             return true;
+        }
+    }
 
     // Check diagonals
-    if (b[0, 0] == player && b[1, 1] == player && b[2, 2] == player) return true;
-    if (b[0, 2] == player && b[1, 1] == player && b[2, 0] == player) return true;
+    if (b[0, 0] == player && b[1, 1] == player && b[2, 2] == player)
+    {
+        return true;
+    }
+
+    if (b[0, 2] == player && b[1, 1] == player && b[2, 0] == player)
+    {
+        return true;
+    }
 
     return false;
 }
@@ -196,9 +218,16 @@ bool CheckWin(int[,] b, int player)
 bool IsBoardFull(int[,] b)
 {
     for (var i = 0; i < 3; i++)
+    {
         for (var j = 0; j < 3; j++)
+        {
             if (b[i, j] == 0)
+            {
                 return false;
+            }
+        }
+    }
+
     return true;
 }
 
@@ -215,10 +244,11 @@ void PrintBoard(int[,] b)
                 0 => " ",
                 1 => "X",
                 2 => "O",
-                _ => "?"
+                _ => "?",
             };
             Console.Write($"{value} ");
         }
+
         Console.WriteLine();
     }
 }

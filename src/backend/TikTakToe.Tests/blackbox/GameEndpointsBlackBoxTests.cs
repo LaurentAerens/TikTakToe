@@ -1,8 +1,8 @@
+namespace TikTakToe.Tests.BlackBox;
+
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-
-namespace TikTakToe.Tests.BlackBox;
 
 [Trait("Category", "BlackBox")]
 [Collection(BlackBoxCollection.Name)]

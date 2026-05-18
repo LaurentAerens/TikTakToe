@@ -1,7 +1,7 @@
+namespace TikTakToe.Engines;
+
 using TikTakToe.Engines.Evaluation;
 using TikTakToe.Engines.Search;
-
-namespace TikTakToe.Engines;
 
 /// <summary>
 /// Abstract base class for minimax-based engines.
@@ -18,6 +18,7 @@ public abstract class MinimaxEngineBase : SearchEngineBase
     /// <summary>
     /// Minimax maximizes for player 1 and minimizes for player 2.
     /// </summary>
+    /// <returns></returns>
     protected override bool ShouldMaximize(int player, int enginePlayer)
     {
         return player == 1;

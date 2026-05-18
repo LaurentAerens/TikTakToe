@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/stylecop.schema.json",
+  "settings": {
+    "indentation": {
+      "indentationSize": 4,
+      "useTabs": false,
+      "tabSize": 4
+    },
+    "namingConventions": {
+      "allowCommonHungarianPrefixes": true,
+      "allowPrivateFieldLeadingUnderscore": true
+    }
+  }
+}

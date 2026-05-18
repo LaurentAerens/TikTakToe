@@ -1,6 +1,6 @@
-using System.Reflection;
-
 namespace TikTakToe.Controllers;
+
+using System.Reflection;
 
 /// <summary>
 /// Health and version controller mappings.

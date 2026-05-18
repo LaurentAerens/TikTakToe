@@ -1,7 +1,7 @@
+namespace TikTakToe.Engines;
+
 using TikTakToe.Engines.Evaluation;
 using TikTakToe.Engines.Search;
-
-namespace TikTakToe.Engines;
 
 /// <summary>
 /// Predicament engine using classical evaluation.
@@ -9,7 +9,8 @@ namespace TikTakToe.Engines;
 /// </summary>
 public sealed class PredicamentEngine : MaxminEngineBase
 {
-    public PredicamentEngine() : base(new ClassicalBoardEvaluator(), new MaxminOpportunityOpponentStrategy())
+    public PredicamentEngine()
+        : base(new ClassicalBoardEvaluator(), new MaxminOpportunityOpponentStrategy())
     {
     }
 }

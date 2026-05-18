@@ -1,17 +1,17 @@
+namespace TikTakToe.Tests.BlackBox;
+
 using System.Diagnostics;
 using System.Net;
 
-namespace TikTakToe.Tests.BlackBox;
-
 public sealed class BlackBoxComposeFixture : IAsyncLifetime
 {
-    private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(2);
     private const string ComposeBaseArguments = "compose -p tiktaktoe-blackbox -f docker-compose.yml --profile test";
+    private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(2);
     private readonly string repositoryRoot;
 
     public BlackBoxComposeFixture()
     {
-        repositoryRoot = FindRepositoryRoot();
+        this.repositoryRoot = FindRepositoryRoot();
     }
 
     public Uri BaseAddress { get; } = new("http://localhost:8080");
@@ -23,8 +23,8 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
             return;
         }
 
-        await RunComposeAsync("up -d --build backend");
-        await WaitForHealthAsync();
+        await this.RunComposeAsync("up -d --build backend");
+        await this.WaitForHealthAsync();
     }
 
     public async Task DisposeAsync()
@@ -34,12 +34,29 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
             return;
         }
 
-        await RunComposeAsync("down --remove-orphans -v");
+        await this.RunComposeAsync("down --remove-orphans -v");
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            var composeFilePath = Path.Combine(current.FullName, "docker-compose.yml");
+            if (File.Exists(composeFilePath))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate repository root containing docker-compose.yml.");
     }
 
     private async Task WaitForHealthAsync()
     {
-        using var client = new HttpClient { BaseAddress = BaseAddress };
+        using var client = new HttpClient { BaseAddress = this.BaseAddress };
         var deadline = DateTime.UtcNow + StartupTimeout;
 
         while (DateTime.UtcNow < deadline)
@@ -69,7 +86,7 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
         {
             FileName = "docker",
             Arguments = $"{ComposeBaseArguments} {arguments}",
-            WorkingDirectory = repositoryRoot,
+            WorkingDirectory = this.repositoryRoot,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             UseShellExecute = false,
@@ -87,6 +104,7 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
                 startInfo.EnvironmentVariables[key] = value;
             }
         }
+
         startInfo.EnvironmentVariables["FEATURES__APPLYMIGRATIONSONSTARTUP"] = "true";
 
         using var process = Process.Start(startInfo)
@@ -101,22 +119,5 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
             throw new InvalidOperationException(
                 $"docker compose failed with exit code {process.ExitCode}. Output: {standardOutput}\nErrors: {standardError}");
         }
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var current = new DirectoryInfo(AppContext.BaseDirectory);
-        while (current is not null)
-        {
-            var composeFilePath = Path.Combine(current.FullName, "docker-compose.yml");
-            if (File.Exists(composeFilePath))
-            {
-                return current.FullName;
-            }
-
-            current = current.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not locate repository root containing docker-compose.yml.");
     }
 }

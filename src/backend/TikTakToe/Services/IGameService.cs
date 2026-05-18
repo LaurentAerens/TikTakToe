@@ -1,6 +1,6 @@
-using TikTakToe.Models;
-
 namespace TikTakToe.Services;
+
+using TikTakToe.Models;
 
 /// <summary>
 /// Coordinates game persistence operations.

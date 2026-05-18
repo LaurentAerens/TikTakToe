@@ -7,7 +7,7 @@ public sealed class BlackBoxFactAttribute : FactAttribute
     {
         if (BlackBoxTestSettings.ShouldSkip())
         {
-            Skip = $"Skipped because {BlackBoxTestSettings.SkipVariableName}=true.";
+            this.Skip = $"Skipped because {BlackBoxTestSettings.SkipVariableName}=true.";
         }
     }
 }

@@ -1,6 +1,6 @@
-using TikTakToe.Engines.Evaluation;
-
 namespace TikTakToe.Engines;
+
+using TikTakToe.Engines.Evaluation;
 
 /// <summary>
 /// Disconnected engine for 3x3 Tic-Tac-Toe.
@@ -8,7 +8,8 @@ namespace TikTakToe.Engines;
 /// </summary>
 public sealed class DisconnectedEngine : MaxminEngineBase
 {
-    public DisconnectedEngine() : base(new HalfDepthBoardEvaluator())
+    public DisconnectedEngine()
+        : base(new HalfDepthBoardEvaluator())
     {
     }
 }

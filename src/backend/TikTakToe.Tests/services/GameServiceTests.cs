@@ -1,9 +1,9 @@
+namespace TikTakToe.Tests.Services;
+
 using Microsoft.EntityFrameworkCore;
 using TikTakToe.Data;
 using TikTakToe.Models;
 using TikTakToe.Services;
-
-namespace TikTakToe.Tests.Services;
 
 public sealed class GameServiceTests
 {

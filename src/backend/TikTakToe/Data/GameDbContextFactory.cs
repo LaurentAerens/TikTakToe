@@ -1,9 +1,9 @@
+namespace TikTakToe.Data;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-
-namespace TikTakToe.Data;
 
 /// <summary>
 /// Design-time factory for EF Core migration commands.
