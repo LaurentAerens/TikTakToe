@@ -1,7 +1,7 @@
+namespace TikTakToe.Controllers;
+
 using TikTakToe.Models;
 using TikTakToe.Services;
-
-namespace TikTakToe.Controllers;
 
 public static class EngineLookupController
 {
@@ -75,5 +75,6 @@ public static class EngineLookupController
     }
 
     private sealed record EngineCapabilityDto(Guid Id, Guid PlayerId, string DisplayName, int MaxBoardSizeX, int MaxBoardSizeY, bool Depth, int[] SupportedPlayers);
+
     private sealed record EngineIdLookupDto(Guid Id, Guid PlayerId, string DisplayName);
 }

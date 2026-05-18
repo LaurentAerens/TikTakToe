@@ -1,8 +1,9 @@
+namespace TikTakToe.Services;
+
 using Microsoft.EntityFrameworkCore;
+
 using TikTakToe.Data;
 using TikTakToe.Models;
-
-namespace TikTakToe.Services;
 
 /// <summary>
 /// Default implementation for game persistence orchestration.
@@ -78,6 +79,7 @@ public sealed class GameService(GameDbContext dbContext) : IGameService
         {
             return null;
         }
+
         return game;
     }
 }

@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Configuration;
-
 namespace TikTakToe.Data;
+
+using Microsoft.Extensions.Configuration;
 
 /// <summary>
 /// Configuration values used to build a PostgreSQL connection string.

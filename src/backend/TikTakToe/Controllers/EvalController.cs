@@ -1,7 +1,7 @@
+namespace TikTakToe.Controllers;
+
 using TikTakToe.Models;
 using TikTakToe.Services;
-
-namespace TikTakToe.Controllers;
 
 /// <summary>
 /// Controller mappings for board evaluation operations.
@@ -35,5 +35,6 @@ public static class EvalController
     }
 
     private sealed record EvalRequest(Guid EngineId, int[][]? Board, int Player, int? Depth = null);
+
     private sealed record EvalResponseDto(int Score);
 }

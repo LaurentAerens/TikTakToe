@@ -1,7 +1,7 @@
+namespace TikTakToe.Controllers;
+
 using TikTakToe.Models;
 using TikTakToe.Services;
-
-namespace TikTakToe.Controllers;
 
 /// <summary>
 /// Controller mappings for game persistence operations.
@@ -97,7 +97,10 @@ public static class GameController
     }
 
     private sealed record CreateGameRequest(int Rows = 3, int Cols = 3, Guid[]? PlayerIds = null);
+
     private sealed record GameDto(Guid Id, int[][] Board, PlayerDto[] Players, MoveDto[] Moves);
+
     private sealed record PlayerDto(Guid Id, bool IsEngine, string? ExternalId);
+
     private sealed record MoveDto(Guid Id, int X, int Y, int Value, int MoveNumber);
 }

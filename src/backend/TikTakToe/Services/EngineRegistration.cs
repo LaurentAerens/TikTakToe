@@ -1,6 +1,6 @@
-using TikTakToe.Engines.Interface;
-
 namespace TikTakToe.Services;
+
+using TikTakToe.Engines.Interface;
 
 internal sealed record EngineRegistration(
     string DisplayName,
