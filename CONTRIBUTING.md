@@ -61,6 +61,19 @@ Maintenance: keep this curated blocker list synchronized with `.github/workflows
 
 ```powershell
 dotnet build src/backend/TikTakToe.slnx -c Release -p:EnforceCodeStyleInBuild=true -p:TreatWarningsAsErrors=false --no-restore --verbosity normal
+## Automated Quality Gates
+
+Pull requests and pushes to `main` run the code quality workflow, including duplicate code scanning.
+
+- Duplicate scanning is powered by `jscpd`.
+- Current duplication threshold is `4%` (build fails above this value).
+- Scan scope is configured in `.jscpd.json`.
+
+Run the same duplicate scan locally before opening a PR:
+
+```bash
+npm ci --prefix .github/tools/duplicate-scan
+./.github/tools/duplicate-scan/node_modules/.bin/jscpd --config .jscpd.json src/backend src/frontend/src
 ```
 
 ## Reporting Issues
