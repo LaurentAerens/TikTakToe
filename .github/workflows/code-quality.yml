@@ -114,6 +114,8 @@ jobs:
     permissions:
       contents: read
       checks: write
+      issues: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -168,7 +170,7 @@ jobs:
           echo "- Detailed annotations are available via uploaded SARIF." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build StyleCop PR comment body
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         id: stylecop_pr_comment_body
         shell: bash
         run: |
@@ -200,7 +202,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Upsert StyleCop PR comment
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v9
         env:
           COMMENT_BODY: ${{ steps.stylecop_pr_comment_body.outputs.comment_body }}
@@ -237,6 +239,12 @@ jobs:
                 body,
               });
             }
+
+      - name: Skip StyleCop PR comment on forks
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        shell: bash
+        run: |
+          echo "Skipping StyleCop PR comment for forked PR (read-only GITHUB_TOKEN)."
 
       - name: Annotate top StyleCop violations
         if: steps.stylecop_build.outcome == 'failure'
