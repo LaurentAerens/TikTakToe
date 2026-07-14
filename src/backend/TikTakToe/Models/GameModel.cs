@@ -1,5 +1,7 @@
 namespace TikTakToe.Models;
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 /// <summary>
 /// Represents a persisted game.
 /// </summary>
@@ -21,9 +23,18 @@ public sealed class GameModel
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Gets or sets the game players.
+    /// Gets or sets the game participants.
     /// </summary>
-    public List<PlayerModel> Players { get; set; } = [];
+    public List<GamePlayerModel> GamePlayers { get; set; } = [];
+
+    /// <summary>
+    /// Gets the game players in turn order.
+    /// </summary>
+    [NotMapped]
+    public List<PlayerModel> Players => this.GamePlayers
+        .OrderBy(x => x.TurnOrder)
+        .Select(x => x.Player)
+        .ToList();
 
     /// <summary>
     /// Gets or sets the game moves.
@@ -35,4 +46,10 @@ public sealed class GameModel
     /// This property is persisted by EF Core to PostgreSQL jsonb.
     /// </summary>
     public int[,]? Board { get; set; }
+
+    /// <summary>
+    /// Gets or sets the ID of the player whose turn it is.
+    /// Null when the game is over (win or draw).
+    /// </summary>
+    public Guid? WaitingForPlayerId { get; set; }
 }

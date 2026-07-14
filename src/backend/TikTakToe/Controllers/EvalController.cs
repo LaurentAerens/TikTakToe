@@ -1,7 +1,9 @@
 namespace TikTakToe.Controllers;
 
 using TikTakToe.Models;
+using TikTakToe.Models.Dto;
 using TikTakToe.Services;
+
 
 /// <summary>
 /// Controller mappings for board evaluation operations.
@@ -30,11 +32,11 @@ public static class EvalController
                 return Results.BadRequest(ApiResponse<EvalResponseDto>.Fail(ex.Message));
             }
         })
-        .WithName("EvalBoard")
-        .WithSummary("Evaluates a board with the selected engine and player perspective");
+        .WithName("EstimateBoardPosition")
+        .WithSummary("Estimate board advantage for a player");
     }
 
-    private sealed record EvalRequest(Guid EngineId, int[][]? Board, int Player, int? Depth = null);
 
-    private sealed record EvalResponseDto(int Score);
+
+
 }

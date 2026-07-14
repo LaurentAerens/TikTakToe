@@ -28,8 +28,8 @@ public static class EngineLookupController
 
             return Results.Ok(ApiResponse<EngineCapabilityDto[]>.Ok(result.ToArray()));
         })
-        .WithName("ListEngineCapabilities")
-        .WithSummary("Lists all engines and their capabilities");
+        .WithName("ListAvailableOpponents")
+        .WithSummary("List available AI opponents");
 
         app.MapGet("/engines/{id:guid}", async (Guid id, IEngineLookupProvider provider, CancellationToken cancellationToken) =>
         {
@@ -42,8 +42,8 @@ public static class EngineLookupController
 
             return Results.Ok(ApiResponse<EngineIdLookupDto>.Ok(new EngineIdLookupDto(capability.Id, capability.PlayerId, capability.DisplayName)));
         })
-        .WithName("GetEngineById")
-        .WithSummary("Gets engine details by id");
+        .WithName("GetOpponentById")
+        .WithSummary("Get AI opponent details by ID");
 
         app.MapGet("/engines/{displayName}", async (string displayName, IEngineLookupProvider provider, CancellationToken cancellationToken) =>
         {
@@ -56,8 +56,8 @@ public static class EngineLookupController
 
             return Results.Ok(ApiResponse<EngineIdLookupDto>.Ok(new EngineIdLookupDto(capability.Id, capability.PlayerId, capability.DisplayName)));
         })
-        .WithName("GetEngineByDisplayName")
-        .WithSummary("Gets engine details by display name");
+        .WithName("FindOpponentByName")
+        .WithSummary("Find AI opponent details by name");
 
         app.MapGet("/engines/resolve-engine-id/{playerId:guid}", async (Guid playerId, IEngineLookupProvider provider, CancellationToken cancellationToken) =>
         {
@@ -70,8 +70,8 @@ public static class EngineLookupController
 
             return Results.Ok(ApiResponse<EngineIdLookupDto>.Ok(new EngineIdLookupDto(capability.Id, capability.PlayerId, capability.DisplayName)));
         })
-        .WithName("ResolveEngineIdByPlayerId")
-        .WithSummary("Converts engine player id to engine id");
+        .WithName("ResolveOpponentEngineId")
+        .WithSummary("Resolve the AI engine ID for a player");
     }
 
     private sealed record EngineCapabilityDto(Guid Id, Guid PlayerId, string DisplayName, int MaxBoardSizeX, int MaxBoardSizeY, bool Depth, int[] SupportedPlayers);

@@ -24,4 +24,15 @@ public interface IGameService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The game model when found; otherwise null.</returns>
     Task<GameModel?> GetAsync(Guid gameId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Makes a move in a game, validating turns and running engines if necessary.
+    /// </summary>
+    /// <param name="gameId">The game identifier.</param>
+    /// <param name="playerId">The player identifier making the move.</param>
+    /// <param name="x">The row index (null for engine moves).</param>
+    /// <param name="y">The column index (null for engine moves).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated game model.</returns>
+    Task<GameModel> MakeMoveAsync(Guid gameId, Guid playerId, int? x, int? y, CancellationToken cancellationToken = default);
 }
