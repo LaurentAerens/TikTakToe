@@ -114,8 +114,10 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
             throw new InvalidOperationException("Game has no registered players.");
         }
 
+        var board = game.Board ?? throw new InvalidOperationException("Game board is unavailable.");
+
         // Determine if game is already over
-        if (GameRules.IsGameOver(game.Board))
+        if (GameRules.IsGameOver(board))
         {
             throw new InvalidOperationException("Game is already over.");
         }
@@ -137,8 +139,8 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
             throw new InvalidOperationException($"It is not player {playerId}'s turn.");
         }
 
-        var rows = game.Board?.GetLength(0) ?? 0;
-        var cols = game.Board?.GetLength(1) ?? 0;
+        var rows = board.GetLength(0);
+        var cols = board.GetLength(1);
 
         int moveX;
         int moveY;
@@ -158,7 +160,7 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
             }
 
             // Save copy of current board to compare and find the chosen coordinates
-            var oldBoard = (int[,])game.Board!.Clone();
+            var oldBoard = (int[,])board.Clone();
 
             // Run engine to determine the move
             var (newBoard, _) = engine.Move(oldBoard, playerValue);
@@ -214,13 +216,13 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
                 throw new ArgumentOutOfRangeException(null, "Coordinates are out of board boundaries.");
             }
 
-            if (game.Board![moveX, moveY] != 0)
+            if (board[moveX, moveY] != 0)
             {
                 throw new InvalidOperationException("Cell is already occupied.");
             }
 
             // Update game board state
-            game.Board[moveX, moveY] = playerValue;
+            board[moveX, moveY] = playerValue;
         }
 
         // Record the move

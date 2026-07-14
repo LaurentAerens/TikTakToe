@@ -23,15 +23,7 @@ public static class GameRules
 
         // Standard Tic-Tac-Toe requires 3 in a row.
         // For boards smaller than 3 in both directions, the target is the minimum dimension.
-        int target;
-        if (rows >= 3 && cols >= 3)
-        {
-            target = 3;
-        }
-        else
-        {
-            target = Math.Min(rows, cols);
-        }
+        var target = rows >= 3 && cols >= 3 ? 3 : Math.Min(rows, cols);
 
         if (target <= 0)
         {

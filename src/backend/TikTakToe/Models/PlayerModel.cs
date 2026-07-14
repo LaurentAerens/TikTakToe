@@ -19,5 +19,4 @@ public sealed class PlayerModel
     /// Gets or sets an external identity reference when available.
     /// </summary>
     public string? ExternalId { get; set; }
-
 }

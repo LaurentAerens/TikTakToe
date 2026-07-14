@@ -4,7 +4,6 @@ using TikTakToe.Models;
 using TikTakToe.Models.Dto;
 using TikTakToe.Services;
 
-
 /// <summary>
 /// Controller mappings for board evaluation operations.
 /// </summary>
@@ -35,8 +34,4 @@ public static class EvalController
         .WithName("EstimateBoardPosition")
         .WithSummary("Estimate board advantage for a player");
     }
-
-
-
-
 }

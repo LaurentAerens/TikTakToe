@@ -118,7 +118,6 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
         await process.WaitForExitAsync();
         if (process.ExitCode != 0)
         {
-
             throw new InvalidOperationException(
                 $"docker compose failed with exit code {process.ExitCode}. Output: {standardOutput}\nErrors: {standardError}");
         }

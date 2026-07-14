@@ -139,8 +139,16 @@ jobs:
             -c Release \
             -p:EnforceCodeStyleInBuild=true \
             -p:TreatWarningsAsErrors=true \
+            -p:ErrorLog=stylecop.sarif \
+            -p:ErrorLogVersion=2 \
             --no-restore \
             --verbosity normal 2>&1 | tee build-output.log
+
+      - name: Upload StyleCop SARIF
+        if: always() && hashFiles('stylecop.sarif') != ''
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          sarif_file: stylecop.sarif
 
       - name: Summarize StyleCop diagnostics
         if: always()
@@ -157,6 +165,78 @@ jobs:
           fi
           echo "- Diagnostics found: ${DIAGNOSTIC_COUNT}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Unique rules triggered: ${UNIQUE_RULE_COUNT}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Detailed annotations are available via uploaded SARIF." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build StyleCop PR comment body
+        if: always() && github.event_name == 'pull_request'
+        id: stylecop_pr_comment_body
+        shell: bash
+        run: |
+          STATUS_ICON="✅"
+          STATUS_TEXT="PASS"
+          if [ "${{ steps.stylecop_build.outcome }}" != "success" ]; then
+            STATUS_ICON="❌"
+            STATUS_TEXT="FAIL"
+          fi
+
+          DIAGNOSTIC_COUNT=$(grep -E -c '\bSA[0-9]{4}\b' build-output.log || true)
+          TOP_RULES=$( (grep -E -o '\bSA[0-9]{4}\b' build-output.log || true) | sort | uniq -c | sort -nr | head -n 10 | awk '{print "- " $2 ": " $1 " occurrences"}')
+
+          {
+            echo 'comment_body<<EOF'
+            echo '<!-- stylecop-analysis-report -->'
+            echo "## StyleCop Analyzer ${STATUS_ICON} ${STATUS_TEXT}"
+            echo
+            echo "- Diagnostics found: ${DIAGNOSTIC_COUNT}"
+            echo "- Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo
+            if [ -n "$TOP_RULES" ]; then
+              echo "### Top Rule Violations"
+              echo "$TOP_RULES"
+              echo
+            fi
+            echo "_This comment is automatically updated on each run._"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upsert StyleCop PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        env:
+          COMMENT_BODY: ${{ steps.stylecop_pr_comment_body.outputs.comment_body }}
+        with:
+          script: |
+            const marker = '<!-- stylecop-analysis-report -->';
+            const body = process.env.COMMENT_BODY;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(
+              (c) => c.user?.type === 'Bot' && c.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
 
       - name: Annotate top StyleCop violations
         if: steps.stylecop_build.outcome == 'failure'
