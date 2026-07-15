@@ -60,6 +60,7 @@ public abstract class SearchEngineBase : IEngine
     /// <summary>
     /// Picks one index from a set of tied best moves.
     /// </summary>
+    /// <returns></returns>
     protected virtual int PickRandomIndex(int count)
     {
         return Rng.Next(count);
