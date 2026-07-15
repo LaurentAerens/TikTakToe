@@ -6,11 +6,13 @@ using TikTakToe.Engines.Interface;
 using TikTakToe.Engines.Search;
 
 /// <summary>
-/// Abstract base class providing common search logic for engines using tree-based evaluation.
+/// Abstract class providing common search logic for engines using tree-based evaluation.
 /// Concrete engines specify the opponent strategy and search direction (maximize/minimize).
 /// </summary>
 public abstract class SearchEngineBase : IEngine
 {
+    private static readonly Random Rng = Random.Shared;
+
     private readonly IBoardEvaluator _boardEvaluator;
     private readonly IOpponentStrategy _opponentStrategy;
 
@@ -54,6 +56,15 @@ public abstract class SearchEngineBase : IEngine
     /// </summary>
     /// <returns></returns>
     protected abstract bool ShouldMaximize(int player, int enginePlayer);
+
+    /// <summary>
+    /// Picks one index from a set of tied best moves.
+    /// </summary>
+    /// <returns></returns>
+    protected virtual int PickRandomIndex(int count)
+    {
+        return Rng.Next(count);
+    }
 
     private static int CountEmptyCells(int[,] board)
     {
@@ -105,8 +116,8 @@ public abstract class SearchEngineBase : IEngine
         var moves = GenerateMoves(board, player);
 
         var shouldMaximize = this.ShouldMaximize(player, enginePlayer);
-        var bestMove = moves[0];
         var bestScore = shouldMaximize ? int.MinValue : int.MaxValue;
+        var bestMoveIndices = new List<int>();
 
         if (moves.Count > 1)
         {
@@ -126,7 +137,12 @@ public abstract class SearchEngineBase : IEngine
                     if (moveScore > bestScore)
                     {
                         bestScore = moveScore;
-                        bestMove = moves[i];
+                        bestMoveIndices.Clear();
+                        bestMoveIndices.Add(i);
+                    }
+                    else if (moveScore == bestScore)
+                    {
+                        bestMoveIndices.Add(i);
                     }
                 }
                 else
@@ -134,11 +150,18 @@ public abstract class SearchEngineBase : IEngine
                     if (moveScore < bestScore)
                     {
                         bestScore = moveScore;
-                        bestMove = moves[i];
+                        bestMoveIndices.Clear();
+                        bestMoveIndices.Add(i);
+                    }
+                    else if (moveScore == bestScore)
+                    {
+                        bestMoveIndices.Add(i);
                     }
                 }
             }
 
+            var chosenIndex = bestMoveIndices[this.PickRandomIndex(bestMoveIndices.Count)];
+            var bestMove = moves[chosenIndex];
             return (bestMove, bestScore);
         }
 
