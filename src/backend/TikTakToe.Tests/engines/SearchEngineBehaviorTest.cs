@@ -8,40 +8,6 @@ using TikTakToe.Engines.Search;
 
 public class SearchEngineBehaviorTest
 {
-    private sealed class ZeroBoardEvaluator : IBoardEvaluator
-    {
-        public int Evaluate(int[,] board)
-        {
-            return 0;
-        }
-    }
-
-    private sealed class TieBreakingTestEngine : SearchEngineBase
-    {
-        private readonly Queue<int> picks;
-
-        public TieBreakingTestEngine(params int[] picks)
-            : base(new ZeroBoardEvaluator(), new MinimaxOpponentStrategy())
-        {
-            this.picks = new Queue<int>(picks);
-        }
-
-        protected override bool ShouldMaximize(int player, int enginePlayer)
-        {
-            return player == enginePlayer;
-        }
-
-        protected override int PickRandomIndex(int count)
-        {
-            if (this.picks.Count == 0)
-            {
-                return 0;
-            }
-
-            return this.picks.Dequeue() % count;
-        }
-    }
-
     public static IEnumerable<object[]> SearchEngineFactories()
     {
         yield return new object[]
@@ -386,5 +352,39 @@ public class SearchEngineBehaviorTest
 
         Assert.Equal(1, firstBoard[0, 0]);
         Assert.Equal(1, secondBoard[0, 1]);
+    }
+
+    private sealed class ZeroBoardEvaluator : IBoardEvaluator
+    {
+        public int Evaluate(int[,] board)
+        {
+            return 0;
+        }
+    }
+
+    private sealed class TieBreakingTestEngine : SearchEngineBase
+    {
+        private readonly Queue<int> picks;
+
+        public TieBreakingTestEngine(params int[] picks)
+            : base(new ZeroBoardEvaluator(), new MinimaxOpponentStrategy())
+        {
+            this.picks = new Queue<int>(picks);
+        }
+
+        protected override bool ShouldMaximize(int player, int enginePlayer)
+        {
+            return player == enginePlayer;
+        }
+
+        protected override int PickRandomIndex(int count)
+        {
+            if (this.picks.Count == 0)
+            {
+                return 0;
+            }
+
+            return this.picks.Dequeue() % count;
+        }
     }
 }
