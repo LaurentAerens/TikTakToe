@@ -1,11 +1,47 @@
 namespace TikTakToe.Tests.Engines;
 
 using TikTakToe.Engines;
+using TikTakToe.Engines.Evaluation;
 using TikTakToe.Engines.Exceptions;
 using TikTakToe.Engines.Interface;
+using TikTakToe.Engines.Search;
 
 public class SearchEngineBehaviorTest
 {
+    private sealed class ZeroBoardEvaluator : IBoardEvaluator
+    {
+        public int Evaluate(int[,] board)
+        {
+            return 0;
+        }
+    }
+
+    private sealed class TieBreakingTestEngine : SearchEngineBase
+    {
+        private readonly Queue<int> picks;
+
+        public TieBreakingTestEngine(params int[] picks)
+            : base(new ZeroBoardEvaluator(), new MinimaxOpponentStrategy())
+        {
+            this.picks = new Queue<int>(picks);
+        }
+
+        protected override bool ShouldMaximize(int player, int enginePlayer)
+        {
+            return player == enginePlayer;
+        }
+
+        protected override int PickRandomIndex(int count)
+        {
+            if (this.picks.Count == 0)
+            {
+                return 0;
+            }
+
+            return this.picks.Dequeue() % count;
+        }
+    }
+
     public static IEnumerable<object[]> SearchEngineFactories()
     {
         yield return new object[]
@@ -23,6 +59,10 @@ public class SearchEngineBehaviorTest
         yield return new object[]
         {
             new Func<IEngine>(() => new HalftunityEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new SightlineEngine()),
         };
         yield return new object[]
         {
@@ -60,6 +100,10 @@ public class SearchEngineBehaviorTest
         {
             new Func<IEngine>(() => new HalftunityEngine()),
         };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new SightlineEngine()),
+        };
     }
 
     public static IEnumerable<object[]> WeakSearchEngineFactories()
@@ -79,6 +123,10 @@ public class SearchEngineBehaviorTest
         yield return new object[]
         {
             new Func<IEngine>(() => new DisconnicamentEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new BlindsightEngine()),
         };
     }
 
@@ -320,5 +368,23 @@ public class SearchEngineBehaviorTest
 
         Assert.Equal(scoreWithFullDepth, scoreWithoutDepth);
         Assert.NotEqual(0, scoreWithoutDepth);
+    }
+
+    [Fact]
+    public void Move_WhenMultipleMovesTie_PicksFromTheFullTieSet()
+    {
+        var engine = new TieBreakingTestEngine(0, 1);
+        var board = new int[3, 3]
+        {
+            { 0, 0, 0 },
+            { 0, 0, 0 },
+            { 0, 0, 0 },
+        };
+
+        var (firstBoard, _) = engine.Move(board, player: 1);
+        var (secondBoard, _) = engine.Move(board, player: 1);
+
+        Assert.Equal(1, firstBoard[0, 0]);
+        Assert.Equal(1, secondBoard[0, 1]);
     }
 }
