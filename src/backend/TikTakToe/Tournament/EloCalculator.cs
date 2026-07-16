@@ -79,14 +79,14 @@ public static class EloCalculator
         var gamesPlayed = engineIds.ToDictionary(id => id, _ => 0);
         foreach (var result in matchResults)
         {
-            if (gamesPlayed.ContainsKey(result.Engine1Id))
+            if (gamesPlayed.TryGetValue(result.Engine1Id, out var engine1Games))
             {
-                gamesPlayed[result.Engine1Id]++;
+                gamesPlayed[result.Engine1Id] = engine1Games + 1;
             }
 
-            if (gamesPlayed.ContainsKey(result.Engine2Id))
+            if (gamesPlayed.TryGetValue(result.Engine2Id, out var engine2Games))
             {
-                gamesPlayed[result.Engine2Id]++;
+                gamesPlayed[result.Engine2Id] = engine2Games + 1;
             }
         }
 
@@ -98,13 +98,14 @@ public static class EloCalculator
             // Freeze ratings for this pass so every game uses the same snapshot of the field.
             foreach (var result in matchResults)
             {
-                if (!ratings.ContainsKey(result.Engine1Id) || !ratings.ContainsKey(result.Engine2Id))
+                if (!ratings.TryGetValue(result.Engine1Id, out var rating1)
+                    || !ratings.TryGetValue(result.Engine2Id, out var rating2))
                 {
                     continue;
                 }
 
                 var engine1Score = ResultToScore(result.ResultFromEngine1Perspective);
-                var expected1 = CalculateExpectedScore(ratings[result.Engine1Id], ratings[result.Engine2Id]);
+                var expected1 = CalculateExpectedScore(rating1, rating2);
                 var residual1 = engine1Score - expected1;
 
                 deltas[result.Engine1Id] += residual1;
