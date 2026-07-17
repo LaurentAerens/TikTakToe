@@ -123,15 +123,13 @@ jobs:
             echo "COVERAGE_PERCENT=0" >> $GITHUB_OUTPUT
           fi
 
-      - name: Upload Coverage Reports
+      - name: Upload Coverage Report as Artifact
         if: ${{ inputs.run_tests }}
-        uses: codecov/codecov-action@v7
+        uses: actions/upload-artifact@v4
         with:
-          files: ./coverage/**/coverage.cobertura.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage-report-${{ github.run_id }}
+          path: ./coverage/report
+          retention-days: 30
 
       - name: Publish Test Results
         if: always()
@@ -252,6 +250,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ inputs.pr_number }}
           PROJECT_NAME: ${{ inputs.project_name }}
+          RUN_ID: ${{ github.run_id }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -259,8 +258,9 @@ jobs:
             const githubRepo = process.env.GITHUB_REPO;
             const prNumber = Number(process.env.PR_NUMBER);
             const projectName = process.env.PROJECT_NAME;
+            const runId = process.env.RUN_ID;
 
-            const comment = `## 📈 Code Coverage Report for ${projectName}\n\n| Metric | Value |\n|--------|-------|\n| Line Coverage | ${coverage}% |\n| Report | [View on Codecov](https://codecov.io/gh/${githubRepo}/pull/${prNumber}) |\n\nFor detailed coverage information, see the [Codecov report](https://codecov.io/gh/${githubRepo}).`;
+            const comment = `## 📈 Code Coverage Report for ${projectName}\n\n| Metric | Value |\n|--------|-------|\n| Line Coverage | ${coverage}% |\n| Report | [View HTML Report](https://github.com/${githubRepo}/actions/runs/${runId}) |\n\nDownload the coverage report artifact from the workflow run to view the detailed HTML report.`;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
