@@ -166,8 +166,12 @@ public sealed class EngineLookupControllerTests : IDisposable
         return element.GetInt32();
     }
 
-    private sealed class FakeEngineLookupProvider(EngineCapabilityWithPlayerModel? capability, IEngine? engine) : IEngineLookupProvider
+    private sealed class FakeEngineLookupProvider(
+        EngineCapabilityWithPlayerModel? capability,
+        IEngine? engine) : IEngineLookupProvider
     {
+        private readonly IEngine? _engine = engine;
+
         public EngineCapabilityWithPlayerModel? Capability { get; } = capability;
 
         public Task EnsureCapabilitiesAsync(CancellationToken cancellationToken = default)
@@ -177,33 +181,33 @@ public sealed class EngineLookupControllerTests : IDisposable
 
         public Task<IReadOnlyList<EngineCapabilityWithPlayerModel>> ListCapabilitiesAsync(CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<EngineCapabilityWithPlayerModel> result = capability is null ? [] : [capability];
+            IReadOnlyList<EngineCapabilityWithPlayerModel> result = this.Capability is null ? [] : [this.Capability];
             return Task.FromResult(result);
         }
 
         public Task<EngineCapabilityWithPlayerModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(capability?.Id == id ? capability : null);
+            return Task.FromResult(this.Capability?.Id == id ? this.Capability : null);
         }
 
         public Task<EngineCapabilityWithPlayerModel?> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(capability?.PlayerId == playerId ? capability : null);
+            return Task.FromResult(this.Capability?.PlayerId == playerId ? this.Capability : null);
         }
 
         public Task<EngineCapabilityWithPlayerModel?> GetByDisplayNameAsync(string displayName, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(capability?.DisplayName == displayName ? capability : null);
+            return Task.FromResult(this.Capability?.DisplayName == displayName ? this.Capability : null);
         }
 
         public Task<IEngine?> CreateEngineByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(capability?.Id == id ? engine : null);
+            return Task.FromResult(this.Capability?.Id == id ? this._engine : null);
         }
 
         public IEngine? CreateEngineFromCapability(EngineCapabilityWithPlayerModel fetchedCapability)
         {
-            return capability == fetchedCapability ? engine : null;
+            return this.Capability == fetchedCapability ? this._engine : null;
         }
 
         public Task<IEngine?> CreateEngineByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
@@ -213,7 +217,7 @@ public sealed class EngineLookupControllerTests : IDisposable
 
         public Task<IReadOnlyCollection<int>> GetSupportedPlayersByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var supportedPlayers = capability?.Id == id ? engine?.SupportedPlayers : null;
+            var supportedPlayers = this.Capability?.Id == id ? this._engine?.SupportedPlayers : null;
             return Task.FromResult<IReadOnlyCollection<int>>(supportedPlayers ?? [1, 2]);
         }
     }

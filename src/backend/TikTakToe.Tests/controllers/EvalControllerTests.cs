@@ -146,8 +146,12 @@ public sealed class EvalControllerTests : IDisposable
         Assert.True(document.RootElement.GetProperty("success").GetBoolean());
     }
 
-    private sealed class FakeEngineLookupProvider(EngineCapabilityWithPlayerModel? capability, IEngine? engine) : IEngineLookupProvider
+    private sealed class FakeEngineLookupProvider(
+        EngineCapabilityWithPlayerModel? capability,
+        IEngine? engine) : IEngineLookupProvider
     {
+        private readonly IEngine? _engine = engine;
+
         public EngineCapabilityWithPlayerModel? Capability { get; } = capability;
 
         public Task EnsureCapabilitiesAsync(CancellationToken cancellationToken = default)
@@ -157,13 +161,13 @@ public sealed class EvalControllerTests : IDisposable
 
         public Task<IReadOnlyList<EngineCapabilityWithPlayerModel>> ListCapabilitiesAsync(CancellationToken cancellationToken = default)
         {
-            IReadOnlyList<EngineCapabilityWithPlayerModel> result = capability is null ? [] : [capability];
+            IReadOnlyList<EngineCapabilityWithPlayerModel> result = this.Capability is null ? [] : [this.Capability];
             return Task.FromResult(result);
         }
 
         public Task<EngineCapabilityWithPlayerModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(capability?.Id == id ? capability : null);
+            return Task.FromResult(this.Capability?.Id == id ? this.Capability : null);
         }
 
         public Task<EngineCapabilityWithPlayerModel?> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
@@ -178,12 +182,12 @@ public sealed class EvalControllerTests : IDisposable
 
         public Task<IEngine?> CreateEngineByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(capability?.Id == id ? engine : null);
+            return Task.FromResult(this.Capability?.Id == id ? this._engine : null);
         }
 
         public IEngine? CreateEngineFromCapability(EngineCapabilityWithPlayerModel fetchedCapability)
         {
-            return capability == fetchedCapability ? engine : null;
+            return this.Capability == fetchedCapability ? this._engine : null;
         }
 
         public Task<IEngine?> CreateEngineByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
@@ -193,7 +197,7 @@ public sealed class EvalControllerTests : IDisposable
 
         public Task<IReadOnlyCollection<int>> GetSupportedPlayersByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var supportedPlayers = capability?.Id == id ? engine?.SupportedPlayers : null;
+            var supportedPlayers = this.Capability?.Id == id ? this._engine?.SupportedPlayers : null;
             return Task.FromResult<IReadOnlyCollection<int>>(supportedPlayers ?? [1, 2]);
         }
     }
