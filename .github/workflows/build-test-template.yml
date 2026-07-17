@@ -83,7 +83,8 @@ jobs:
             --no-build \
             --verbosity normal \
             --logger "trx;LogFileName=test-results.trx" \
-            --collect:"XPlat Code Coverage;Format=cobertura" \
+            --collect:"XPlat Code Coverage" \
+            --settings coverlet.runsettings \
             --results-directory=./coverage
 
       - name: Generate Test Summary
