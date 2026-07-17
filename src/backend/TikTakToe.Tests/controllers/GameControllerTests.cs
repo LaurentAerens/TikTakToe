@@ -28,6 +28,7 @@ public sealed class GameControllerTests : IDisposable
 
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
+
         // Singleton so the request scope does not dispose the shared test context after each call.
         builder.Services.AddSingleton(this._dbContext);
         builder.Services.AddScoped<IGameService, GameService>();
@@ -42,6 +43,7 @@ public sealed class GameControllerTests : IDisposable
     public void Dispose()
     {
         this._client.Dispose();
+
         // Disposing the app also disposes the singleton GameDbContext.
         this._app.DisposeAsync().AsTask().GetAwaiter().GetResult();
     }
