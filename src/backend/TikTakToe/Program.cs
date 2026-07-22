@@ -28,17 +28,19 @@ builder.Services.AddDbContext<GameDbContext>((serviceProvider, options) =>
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IEvalService, EvalService>();
 builder.Services.AddScoped<IEngineLookupProvider, EngineLookupProvider>();
+builder.Services.AddScoped<DatabaseInitializationService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 var exposeApiDocs = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Features:ExposeApiDocs");
 var applyMigrationsOnStartup = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Features:ApplyMigrationsOnStartup");
+var resetDatabaseOnStartup = builder.Configuration.GetValue<bool>("Features:ResetDatabaseOnStartup");
 
 if (applyMigrationsOnStartup)
 {
     using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<GameDbContext>();
-    dbContext.Database.Migrate();
+    var initializationService = scope.ServiceProvider.GetRequiredService<DatabaseInitializationService>();
+    await initializationService.InitializeAsync(resetDatabaseOnStartup);
 }
 
 using (var scope = app.Services.CreateScope())

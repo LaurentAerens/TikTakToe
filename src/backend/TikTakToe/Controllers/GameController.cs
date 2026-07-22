@@ -1,6 +1,9 @@
 namespace TikTakToe.Controllers;
 
+using Microsoft.AspNetCore.Mvc;
+using TikTakToe.Data;
 using TikTakToe.Models;
+using TikTakToe.Models.Dto;
 using TikTakToe.Services;
 
 /// <summary>
@@ -47,8 +50,8 @@ public static class GameController
                 return Results.BadRequest(ApiResponse<GameDto>.Fail(ex.Message));
             }
         })
-        .WithName("CreateGame")
-        .WithSummary("Creates a new game with a rectangular board stored as jsonb");
+        .WithName("StartGameSession")
+        .WithSummary("Start a new game session");
 
         app.MapGet("/games/{id:guid}", async (Guid id, IGameService gameService, CancellationToken cancellationToken) =>
         {
@@ -60,8 +63,67 @@ public static class GameController
 
             return Results.Ok(ApiResponse<GameDto>.Ok(ToDto(game)));
         })
-        .WithName("GetGame")
-        .WithSummary("Returns a game by id");
+        .WithName("GetGameState")
+        .WithSummary("Get the current game state");
+
+        app.MapPost("/games/{id:guid}/moves", async (
+            Guid id,
+            MakeMoveRequest request,
+            [FromHeader(Name = "X-Player-Id")] string? xPlayerIdHeader,
+            [FromHeader(Name = "Player-Id")] string? playerIdHeader,
+            IGameService gameService,
+            CancellationToken cancellationToken) =>
+        {
+            var headerValue = xPlayerIdHeader ?? playerIdHeader;
+            if (string.IsNullOrWhiteSpace(headerValue))
+            {
+                return Results.BadRequest(ApiResponse<GameDto>.Fail("Player identification header (X-Player-Id or Player-Id) is missing."));
+            }
+
+            if (!Guid.TryParse(headerValue, out var playerId))
+            {
+                return Results.BadRequest(ApiResponse<GameDto>.Fail("Player identification header is not a valid GUID."));
+            }
+
+            try
+            {
+                var game = await gameService.MakeMoveAsync(id, playerId, request.X, request.Y, cancellationToken);
+                return Results.Ok(ApiResponse<GameDto>.Ok(ToDto(game)));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return Results.NotFound(ApiResponse<GameDto>.Fail(ex.Message));
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                return Results.BadRequest(ApiResponse<GameDto>.Fail(ex.Message));
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(ApiResponse<GameDto>.Fail(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(ApiResponse<GameDto>.Fail(ex.Message));
+            }
+        })
+        .WithName("PlayTurn")
+        .WithSummary("Play the next turn in a game");
+
+        // Quick and ugly endpoint to create a player for testing
+        app.MapPost("/players", async (CreatePlayerRequest request, GameDbContext dbContext, CancellationToken cancellationToken) =>
+        {
+            var player = new PlayerModel
+            {
+                IsEngine = request.IsEngine,
+                ExternalId = request.ExternalId,
+            };
+            dbContext.Players.Add(player);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return Results.Created($"/players/{player.Id}", ApiResponse<Guid>.Ok(player.Id));
+        })
+        .WithName("RegisterPlayer")
+        .WithSummary("Register a player identity (testing)");
     }
 
     private static GameDto ToDto(GameModel game)
@@ -69,8 +131,13 @@ public static class GameController
         return new GameDto(
             game.Id,
             ToJagged(game.Board),
-            game.Players.Select(p => new PlayerDto(p.Id, p.IsEngine, p.ExternalId)).ToArray(),
-            game.Moves.Select(m => new MoveDto(m.Id, m.X, m.Y, m.Value, m.MoveNumber)).ToArray());
+            game.GamePlayers
+                .OrderBy(x => x.TurnOrder)
+                .Select(x => x.Player)
+                .Select(p => new PlayerDto(p.Id, p.IsEngine, p.ExternalId))
+                .ToArray(),
+            game.Moves.Select(m => new MoveDto(m.Id, m.X, m.Y, m.Value, m.MoveNumber)).ToArray(),
+            game.WaitingForPlayerId);
     }
 
     private static int[][] ToJagged(int[,]? board)
@@ -95,12 +162,4 @@ public static class GameController
 
         return result;
     }
-
-    private sealed record CreateGameRequest(int Rows = 3, int Cols = 3, Guid[]? PlayerIds = null);
-
-    private sealed record GameDto(Guid Id, int[][] Board, PlayerDto[] Players, MoveDto[] Moves);
-
-    private sealed record PlayerDto(Guid Id, bool IsEngine, string? ExternalId);
-
-    private sealed record MoveDto(Guid Id, int X, int Y, int Value, int MoveNumber);
 }

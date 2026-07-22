@@ -254,7 +254,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
             .ToListAsync(cancellationToken);
 
         var existingEnginePlayers = await this._dbContext.Players
-            .Where(x => x.IsEngine && x.GameId == null)
+            .Where(x => x.IsEngine)
             .ToListAsync(cancellationToken);
 
         var hasChanges = false;
@@ -305,7 +305,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
     {
         var enginePlayers = await this._dbContext.Players
             .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null)
+            .Where(x => x.IsEngine && x.ExternalId != null)
             .ToListAsync(cancellationToken);
 
         var playersByExternalId = new Dictionary<string, PlayerModel>(StringComparer.OrdinalIgnoreCase);
