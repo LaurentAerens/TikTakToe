@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <!-- Format of the coverage report -->
+          <Format>cobertura</Format>
+          
+          <!-- Exclude specific files, classes, or functions from coverage -->
+          <!-- Supports glob patterns and assembly filters -->
+          <Exclude>
+            <!-- Console project - local development only -->
+            [TikTakToe.Console]*
+            
+            <!-- Tests project - test code itself -->
+            [TikTakToe.Tests]*
+            
+            <!-- Design-time factories (EF Core migration tools) -->
+            [TikTakToe.Data]*GameDbContextFactory.cs
+            
+            <!-- Additional exclusions can be added here using patterns:
+            - [AssemblyName]*FileName.cs - specific file in assembly
+            - [AssemblyName]*Pattern*.cs - wildcard pattern
+            - [AssemblyName]*Namespace.Class - specific class
+            - [AssemblyName]*Namespace* - entire namespace
+            
+            Examples:
+            [TikTakToe]*DesignTime*.cs
+            [TikTakToe]*Factory*.cs
+            [TikTakToe]*Program.cs
+            [TikTakToe].Migrations*
+            -->
+          </Exclude>
+          
+          <!-- Exclude by attribute (uncomment if needed) -->
+          <!-- <ExcludeByAttribute>Obsolete,GeneratedCode,CompilerGenerated</ExcludeByAttribute> -->
+          
+          <!-- Exclude by file (uncomment if needed) -->
+          <!-- <ExcludeByFile>**/Migrations/**,**/DesignTime/**</ExcludeByFile> -->
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
