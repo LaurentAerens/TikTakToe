@@ -17,7 +17,10 @@
             [TikTakToe.Tests]*
             
             <!-- Design-time factories (EF Core migration tools) -->
-            [TikTakToe.Data]*GameDbContextFactory.cs
+            [TikTakToe]TikTakToe.Data.GameDbContextFactory
+
+            <!-- Generated code (aka migrations) -->
+            [TikTakToe]TikTakToe.Migrations.*
             
             <!-- Additional exclusions can be added here using patterns:
             - [AssemblyName]*FileName.cs - specific file in assembly
@@ -36,8 +39,8 @@
           <!-- Exclude by attribute (uncomment if needed) -->
           <!-- <ExcludeByAttribute>Obsolete,GeneratedCode,CompilerGenerated</ExcludeByAttribute> -->
           
-          <!-- Exclude by file (uncomment if needed) -->
-          <!-- <ExcludeByFile>**/Migrations/**,**/DesignTime/**</ExcludeByFile> -->
+          <!-- Exclude by file -->
+          <ExcludeByFile>**/Migrations/**,**/GameDbContextFactory.cs,**/Program.cs</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>
