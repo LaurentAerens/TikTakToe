@@ -20,6 +20,8 @@ public static class EngineRegistry
         new("disconnected", "Disconnected", static () => new DisconnectedEngine(), true),
         new("predicament", "Predicament", static () => new PredicamentEngine(), true),
         new("disconnicament", "Disconnicament", static () => new DisconnicamentEngine(), true),
+        new("sightline", "Sightline", static () => new SightlineEngine(), true),
+        new("blindsight", "Blindsight", static () => new BlindsightEngine(), true),
     ];
 
     public static IReadOnlyList<string> AllIds => AllEngines.Select(e => e.Id).ToArray();
