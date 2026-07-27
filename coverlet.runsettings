@@ -21,6 +21,9 @@
 
             <!-- Generated code (aka migrations) -->
             [TikTakToe].Migrations*
+
+            <!-- Other default exclusions -->
+            [TikTakToe]*Program.cs
             
             <!-- Additional exclusions can be added here using patterns:
             - [AssemblyName]*FileName.cs - specific file in assembly
