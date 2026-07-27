@@ -13,6 +13,8 @@
 | `DisconnectedEngine`   | Maxmin engine with heuristic evaluation (plays to lose).         |
 | `PredicamentEngine`    | Opportunity but tries to maximize opponent's chance of winning.  |
 | `DisconnicamentEngine` | Predicament + maxmin heuristic evaluation.                       |
+| `SightlineEngine`      | Opportunity-style engine with mild depth-based score discounting. |
+| `BlindsightEngine`     | Reverse-logic classical engine that intentionally prefers bad lines. |
 
 ---
 

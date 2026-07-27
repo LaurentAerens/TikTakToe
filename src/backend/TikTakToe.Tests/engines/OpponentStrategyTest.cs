@@ -58,4 +58,16 @@ public class OpponentStrategyTest
 
         Assert.Equal(0, aggregate);
     }
+
+    [Fact]
+    public void AggregateScores_DepthDiscountOpponentStrategy_Player1Engine_GentlyCompressesMidrangeScores()
+    {
+        var strategy = new DepthDiscountOpponentStrategy();
+        var scores = new[] { 1000, 500, 100 };
+
+        var aggregate = strategy.AggregateScores(scores, currentPlayer: 1, enginePlayer: 1);
+
+        Assert.Equal(1000, aggregate);
+        Assert.Equal(425, strategy.AggregateScores(new[] { 500, 100 }, currentPlayer: 1, enginePlayer: 1));
+    }
 }

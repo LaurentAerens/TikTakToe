@@ -14,8 +14,8 @@ public static class HealthController
     public static void MapHealthController(this WebApplication app)
     {
         app.MapGet("/healthz", () => Results.Ok(new { status = "healthy" }))
-           .WithName("Health")
-           .WithSummary("Returns application health status");
+              .WithName("CheckApiHealth")
+              .WithSummary("Check API health");
 
         app.MapGet("/version", () => Results.Ok(new
         {
@@ -23,7 +23,7 @@ public static class HealthController
                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                               ?.InformationalVersion ?? "unknown",
         }))
-           .WithName("Version")
-           .WithSummary("Returns application version");
+           .WithName("CheckApiVersion")
+           .WithSummary("Check API version");
     }
 }

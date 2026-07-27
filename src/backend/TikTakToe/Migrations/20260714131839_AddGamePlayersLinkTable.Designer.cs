@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TikTakToe.Data;
@@ -11,9 +12,11 @@ using TikTakToe.Data;
 namespace TikTakToe.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260714131839_AddGamePlayersLinkTable")]
+    partial class AddGamePlayersLinkTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -168,6 +171,10 @@ namespace TikTakToe.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("external_id");
 
+                    b.Property<Guid?>("GameId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("game_id");
+
                     b.Property<bool>("IsEngine")
                         .HasColumnType("boolean")
                         .HasColumnName("is_engine");
@@ -177,7 +184,9 @@ namespace TikTakToe.Migrations
                     b.HasIndex("ExternalId")
                         .IsUnique()
                         .HasDatabaseName("IX_players_engine_template_external_id")
-                        .HasFilter("\"is_engine\" = TRUE AND \"external_id\" IS NOT NULL");
+                        .HasFilter("\"is_engine\" = TRUE AND \"game_id\" IS NULL AND \"external_id\" IS NOT NULL");
+
+                    b.HasIndex("GameId");
 
                     b.ToTable("players", (string)null);
                 });
@@ -208,6 +217,15 @@ namespace TikTakToe.Migrations
                         .HasForeignKey("GameId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Game");
+                });
+
+            modelBuilder.Entity("TikTakToe.Models.PlayerModel", b =>
+                {
+                    b.HasOne("TikTakToe.Models.GameModel", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId");
 
                     b.Navigation("Game");
                 });

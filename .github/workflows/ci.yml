@@ -23,6 +23,8 @@ permissions:
   checks: write
   pull-requests: write
   packages: read
+  pages: write
+  id-token: write
 
 jobs:
   build-and-test:
@@ -43,10 +45,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
