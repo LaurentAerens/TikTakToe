@@ -31,6 +31,7 @@ public sealed class GameControllerTests : IDisposable
 
         // Singleton so the request scope does not dispose the shared test context after each call.
         builder.Services.AddSingleton(this._dbContext);
+        builder.Services.AddSingleton<IEngineLookupProvider, EngineLookupProvider>();
         builder.Services.AddScoped<IGameService, GameService>();
 
         this._app = builder.Build();
