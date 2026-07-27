@@ -23,6 +23,8 @@ permissions:
   checks: write
   pull-requests: write
   packages: read
+  pages: write
+  id-token: write
 
 jobs:
   build-and-test:
