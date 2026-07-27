@@ -17,7 +17,9 @@ while (true)
     Console.WriteLine("7) Disconnected");
     Console.WriteLine("8) Predicament");
     Console.WriteLine("9) Disconnicament");
-    Console.Write("Enter choice (1-9, default 1): ");
+    Console.WriteLine("10) Blindsight");
+    Console.WriteLine("11) Sightline");
+    Console.Write("Enter choice (1-11, default 1): ");
     var engineChoice = Console.ReadLine();
     IEngine engine = engineChoice switch
     {
@@ -29,6 +31,8 @@ while (true)
         "7" => new DisconnectedEngine(),
         "8" => new PredicamentEngine(),
         "9" => new DisconnicamentEngine(),
+        "10" => new BlindsightEngine(),
+        "11" => new SightlineEngine(),
         _ => new RandomEngine(),
     };
 

@@ -19,6 +19,8 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
         new("Disconnicament", 3, 3, true, () => new DisconnicamentEngine()),
         new("Opportunity", 3, 3, true, () => new OpportunityEngine()),
         new("Predicament", 3, 3, true, () => new PredicamentEngine()),
+        new("Sightline", 3, 3, true, () => new SightlineEngine()),
+        new("Blindsight", 3, 3, true, () => new BlindsightEngine()),
         new("Random", 10000, 10000, false, () => new RandomEngine()),
     ];
 
