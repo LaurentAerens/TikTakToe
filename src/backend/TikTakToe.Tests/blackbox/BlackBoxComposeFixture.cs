@@ -23,7 +23,9 @@ public sealed class BlackBoxComposeFixture : IAsyncLifetime
             return;
         }
 
-        await this.RunComposeAsync("up -d --build backend");
+        // Always start from a fresh compose environment so tests see a clean database.
+        await this.RunComposeAsync("down --remove-orphans -v");
+        await this.RunComposeAsync("up -d --build --force-recreate backend");
         await this.WaitForHealthAsync();
     }
 
