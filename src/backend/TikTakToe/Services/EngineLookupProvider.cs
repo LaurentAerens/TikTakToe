@@ -19,6 +19,8 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
         new("Disconnicament", 3, 3, true, () => new DisconnicamentEngine()),
         new("Opportunity", 3, 3, true, () => new OpportunityEngine()),
         new("Predicament", 3, 3, true, () => new PredicamentEngine()),
+        new("Sightline", 3, 3, true, () => new SightlineEngine()),
+        new("Blindsight", 3, 3, true, () => new BlindsightEngine()),
         new("Random", 10000, 10000, false, () => new RandomEngine()),
     ];
 
@@ -254,7 +256,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
             .ToListAsync(cancellationToken);
 
         var existingEnginePlayers = await this._dbContext.Players
-            .Where(x => x.IsEngine && x.GameId == null)
+            .Where(x => x.IsEngine)
             .ToListAsync(cancellationToken);
 
         var hasChanges = false;
@@ -305,7 +307,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
     {
         var enginePlayers = await this._dbContext.Players
             .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null)
+            .Where(x => x.IsEngine && x.ExternalId != null)
             .ToListAsync(cancellationToken);
 
         var playersByExternalId = new Dictionary<string, PlayerModel>(StringComparer.OrdinalIgnoreCase);

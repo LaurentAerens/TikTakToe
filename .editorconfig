@@ -324,4 +324,9 @@ dotnet_diagnostic.SA1518.severity = warning
 # SA1519: Braces should not be omitted from multi-line child statement
 dotnet_diagnostic.SA1519.severity = warning
 
+# Tests: require readable tests but not XML doc comments on each test symbol.
+[src/backend/TikTakToe.Tests/**/*.cs]
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+
 # Project-specific suppressions can go here

@@ -79,7 +79,9 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
                 .HasColumnType("jsonb");
         }
 
-        game.HasMany(x => x.Players)
+        game.Property(x => x.WaitingForPlayerId).HasColumnName("waiting_for_player_id");
+
+        game.HasMany(x => x.GamePlayers)
             .WithOne(x => x.Game)
             .HasForeignKey(x => x.GameId)
             .OnDelete(DeleteBehavior.Cascade);
@@ -93,14 +95,24 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         player.ToTable("players");
         player.HasKey(x => x.Id);
         player.Property(x => x.Id).HasColumnName("id");
-        player.Property(x => x.GameId).HasColumnName("game_id");
         player.Property(x => x.IsEngine).HasColumnName("is_engine");
         player.Property(x => x.ExternalId).HasColumnName("external_id").HasMaxLength(128);
-        player.HasIndex(x => x.GameId);
         player.HasIndex(x => x.ExternalId)
             .HasDatabaseName("IX_players_engine_template_external_id")
             .IsUnique()
-            .HasFilter("\"is_engine\" = TRUE AND \"game_id\" IS NULL AND \"external_id\" IS NOT NULL");
+            .HasFilter("\"is_engine\" = TRUE AND \"external_id\" IS NOT NULL");
+
+        var gamePlayer = modelBuilder.Entity<GamePlayerModel>();
+        gamePlayer.ToTable("game_players");
+        gamePlayer.HasKey(x => new { x.GameId, x.PlayerId });
+        gamePlayer.Property(x => x.GameId).HasColumnName("game_id");
+        gamePlayer.Property(x => x.PlayerId).HasColumnName("player_id");
+        gamePlayer.Property(x => x.TurnOrder).HasColumnName("turn_order");
+        gamePlayer.HasIndex(x => new { x.GameId, x.TurnOrder }).IsUnique();
+        gamePlayer.HasOne(x => x.Player)
+            .WithMany()
+            .HasForeignKey(x => x.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         var move = modelBuilder.Entity<MoveModel>();
         move.ToTable("moves");
@@ -400,7 +412,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         var engineCandidates = this.ChangeTracker.Entries<PlayerModel>()
             .Where(x => x.State is EntityState.Added or EntityState.Modified)
             .Select(x => x.Entity)
-            .Where(x => x.IsEngine && x.GameId is null)
+            .Where(x => x.IsEngine)
             .ToArray();
 
         ValidateEnginePlayerCandidateShape(engineCandidates);
@@ -416,7 +428,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
 
         var existing = this.Players
             .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
+            .Where(x => x.IsEngine && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
             .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
             .ToList();
 
@@ -428,7 +440,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         var engineCandidates = this.ChangeTracker.Entries<PlayerModel>()
             .Where(x => x.State is EntityState.Added or EntityState.Modified)
             .Select(x => x.Entity)
-            .Where(x => x.IsEngine && x.GameId is null)
+            .Where(x => x.IsEngine)
             .ToArray();
 
         ValidateEnginePlayerCandidateShape(engineCandidates);
@@ -444,7 +456,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
 
         var existing = await this.Players
             .AsNoTracking()
-            .Where(x => x.IsEngine && x.GameId == null && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
+            .Where(x => x.IsEngine && x.ExternalId != null && engineExternalIds.Contains(x.ExternalId))
             .Select(x => new ExistingEnginePlayer(x.Id, x.ExternalId!))
             .ToListAsync(cancellationToken);
 

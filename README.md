@@ -70,6 +70,32 @@ When switching between modes, clean up first to avoid stale containers:
 docker compose down --remove-orphans
 ```
 
+If you want a completely fresh development database, use the reset helper:
+
+```bash
+bash scripts/reset-dev.sh
+```
+
+On Windows PowerShell, use:
+
+```powershell
+./scripts/reset-dev.ps1
+```
+
+Those commands stop the stack, remove the persisted Postgres volume, and restart the dev profile with an empty database.
+
+To keep the existing database data while restarting the dev stack, use:
+
+```bash
+bash scripts/reset-dev.sh --keep-data
+```
+
+Or in PowerShell:
+
+```powershell
+./scripts/reset-dev.ps1 -KeepData
+```
+
 #### Development Mode
 
 Starts the full development stack with hot-reload and debugging tools:
@@ -80,7 +106,13 @@ Starts the full development stack with hot-reload and debugging tools:
 - Database explorer (pgweb)
 
 ```bash
-docker compose --profile dev up --build
+docker compose --profile dev up --build --force-recreate
+```
+
+The dev profile resets the database on startup by default. To preserve existing data for a dev run, set:
+
+```bash
+FEATURES__RESETDATABASEONSTARTUP=false docker compose --profile dev up --build --force-recreate
 ```
 
 **Available at:**
@@ -96,7 +128,7 @@ Starts only the backend and database for black-box testing:
 - PostgreSQL database
 
 ```bash
-docker compose --profile test up --build
+docker compose --profile test up --build --force-recreate
 ```
 
 **Available at:**
@@ -111,7 +143,7 @@ Starts the full production stack:
 - PostgreSQL database
 
 ```bash
-docker compose --profile prd up --build
+docker compose --profile prd up --build --force-recreate
 ```
 
 **Available at:**
@@ -190,6 +222,7 @@ See [docs/api.md](docs/api.md) for request/response shapes and worked examples.
 | `PGPASSWORD`                      | *(required)*      | Database password                                    |
 | `FEATURES__EXPOSEAPIDOCS`         | `false`           | Expose OpenAPI/Scalar UI outside Development mode    |
 | `FEATURES__APPLYMIGRATIONSONSTARTUP` | `false`        | Run EF Core migrations automatically on startup      |
+| `FEATURES__RESETDATABASEONSTARTUP` | `false`        | Clear application data tables on startup after migrations (dev profile defaults this to `true`) |
 
 See [docs/configuration.md](docs/configuration.md) for the full configuration reference including Docker Compose shell variables.
 
