@@ -83,7 +83,7 @@ public sealed class EngineMoveWorker(
         var queue = scope.ServiceProvider.GetRequiredService<IEngineMoveQueue>();
 
         // Claim a job using SKIP LOCKED
-        var job = await ClaimJobAsync(dbContext, cancellationToken);
+        var job = await this.ClaimJobAsync(dbContext, cancellationToken);
         if (job is null)
         {
             // No job available, wait before polling again
@@ -132,7 +132,7 @@ public sealed class EngineMoveWorker(
                 // Retry with exponential backoff
                 job.AttemptCount++;
                 job.Status = JobStatus.Pending;
-                job.AvailableAtUtc = CalculateBackoff(job.AttemptCount);
+                job.AvailableAtUtc = this.CalculateBackoff(job.AttemptCount);
                 logger.LogInformation("Job {JobId} will retry at {AvailableAt} (attempt {Attempt})", job.Id, job.AvailableAtUtc, job.AttemptCount);
             }
             else
@@ -147,7 +147,7 @@ public sealed class EngineMoveWorker(
         }
     }
 
-    private static async Task<EngineMoveJobModel?> ClaimJobAsync(GameDbContext dbContext, CancellationToken cancellationToken)
+    private async Task<EngineMoveJobModel?> ClaimJobAsync(GameDbContext dbContext, CancellationToken cancellationToken)
     {
         var leaseExpires = DateTime.UtcNow.Add(LeaseDuration);
 
@@ -190,15 +190,15 @@ public sealed class EngineMoveWorker(
             .SingleAsync(x => x.Id == claimedRow.Id, cancellationToken);
     }
 
-    private sealed class ClaimedEngineMoveJobRow
-    {
-        public Guid Id { get; init; }
-    }
-
-    private static DateTime CalculateBackoff(int attemptCount)
+    private DateTime CalculateBackoff(int attemptCount)
     {
         // Exponential backoff: 2^attempt seconds, capped at 5 minutes
         var delaySeconds = Math.Min(Math.Pow(2, attemptCount), 300);
         return DateTime.UtcNow.AddSeconds(delaySeconds);
+    }
+
+    private sealed class ClaimedEngineMoveJobRow
+    {
+        public Guid Id { get; init; }
     }
 }
