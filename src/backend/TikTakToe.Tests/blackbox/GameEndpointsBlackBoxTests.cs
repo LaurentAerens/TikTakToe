@@ -356,7 +356,8 @@ public sealed class GameEndpointsBlackBoxTests(BlackBoxComposeFixture fixture)
 
     private static async Task<Guid> CreateHumanPlayerAsync(HttpClient client)
     {
-        var payload = new { isEngine = false, externalId = (string?)null };
+        string? externalId = null;
+        var payload = new { isEngine = false, externalId };
         using var response = await client.PostAsJsonAsync("/players", payload);
         response.EnsureSuccessStatusCode();
 

@@ -34,7 +34,17 @@ public sealed class EngineMoveWorker(
                 // Expected during shutdown
                 break;
             }
-            catch (Exception ex)
+            catch (NpgsqlException ex)
+            {
+                logger.LogError(ex, "Database error while processing engine move job.");
+                await Task.Delay(PollDelay, stoppingToken);
+            }
+            catch (DbUpdateException ex)
+            {
+                logger.LogError(ex, "EF Core error while processing engine move job.");
+                await Task.Delay(PollDelay, stoppingToken);
+            }
+            catch (InvalidOperationException ex)
             {
                 logger.LogError(ex, "Error processing engine move job.");
                 await Task.Delay(PollDelay, stoppingToken);
@@ -119,32 +129,57 @@ public sealed class EngineMoveWorker(
                 }
             }
         }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogError(ex, "Job {JobId} failed on attempt {Attempt}", job.Id, job.AttemptCount + 1);
-
-            job.LastError = ex.Message.Length > 1000 ? ex.Message.Substring(0, 1000) : ex.Message;
-            job.LeaseOwner = null;
-            job.LeaseExpiresAtUtc = null;
-
-            if (job.AttemptCount < job.MaxAttempts)
-            {
-                // Retry with exponential backoff
-                job.AttemptCount++;
-                job.Status = JobStatus.Pending;
-                job.AvailableAtUtc = this.CalculateBackoff(job.AttemptCount);
-                logger.LogInformation("Job {JobId} will retry at {AvailableAt} (attempt {Attempt})", job.Id, job.AvailableAtUtc, job.AttemptCount);
-            }
-            else
-            {
-                // Max attempts reached, mark as failed
-                job.Status = JobStatus.Failed;
-                job.CompletedAtUtc = DateTime.UtcNow;
-                logger.LogError("Job {JobId} failed after {MaxAttempts} attempts", job.Id, job.MaxAttempts);
-            }
-
-            await dbContext.SaveChangesAsync(cancellationToken);
+            throw;
         }
+        catch (NpgsqlException ex)
+        {
+            await this.HandleJobFailureAsync(dbContext, job, ex, cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            await this.HandleJobFailureAsync(dbContext, job, ex, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await this.HandleJobFailureAsync(dbContext, job, ex, cancellationToken);
+        }
+        catch (ArgumentException ex)
+        {
+            await this.HandleJobFailureAsync(dbContext, job, ex, cancellationToken);
+        }
+    }
+
+    private async Task HandleJobFailureAsync(
+        GameDbContext dbContext,
+        EngineMoveJobModel job,
+        Exception ex,
+        CancellationToken cancellationToken)
+    {
+        logger.LogError(ex, "Job {JobId} failed on attempt {Attempt}", job.Id, job.AttemptCount + 1);
+
+        job.LastError = ex.Message.Length > 1000 ? ex.Message.Substring(0, 1000) : ex.Message;
+        job.LeaseOwner = null;
+        job.LeaseExpiresAtUtc = null;
+
+        if (job.AttemptCount < job.MaxAttempts)
+        {
+            // Retry with exponential backoff
+            job.AttemptCount++;
+            job.Status = JobStatus.Pending;
+            job.AvailableAtUtc = this.CalculateBackoff(job.AttemptCount);
+            logger.LogInformation("Job {JobId} will retry at {AvailableAt} (attempt {Attempt})", job.Id, job.AvailableAtUtc, job.AttemptCount);
+        }
+        else
+        {
+            // Max attempts reached, mark as failed
+            job.Status = JobStatus.Failed;
+            job.CompletedAtUtc = DateTime.UtcNow;
+            logger.LogError("Job {JobId} failed after {MaxAttempts} attempts", job.Id, job.MaxAttempts);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<EngineMoveJobModel?> ClaimJobAsync(GameDbContext dbContext, CancellationToken cancellationToken)
