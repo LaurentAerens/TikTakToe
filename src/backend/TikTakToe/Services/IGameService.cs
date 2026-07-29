@@ -26,13 +26,22 @@ public interface IGameService
     Task<GameModel?> GetAsync(Guid gameId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Makes a move in a game, validating turns and running engines if necessary.
+    /// Makes a move in a game for a human player only.
+    /// Engine moves are automatic and handled by the background worker.
     /// </summary>
     /// <param name="gameId">The game identifier.</param>
     /// <param name="playerId">The player identifier making the move.</param>
-    /// <param name="x">The row index (null for engine moves).</param>
-    /// <param name="y">The column index (null for engine moves).</param>
+    /// <param name="x">The row index.</param>
+    /// <param name="y">The column index.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated game model.</returns>
-    Task<GameModel> MakeMoveAsync(Guid gameId, Guid playerId, int? x, int? y, CancellationToken cancellationToken = default);
+    Task<GameModel> MakeMoveAsync(Guid gameId, Guid playerId, int x, int y, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Applies an engine turn to a game. Called by the background worker.
+    /// </summary>
+    /// <param name="gameId">The game identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated game model.</returns>
+    Task<GameModel> ApplyEngineTurnAsync(Guid gameId, CancellationToken cancellationToken = default);
 }

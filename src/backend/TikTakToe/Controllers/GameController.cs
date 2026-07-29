@@ -11,6 +11,7 @@ using TikTakToe.Services;
 /// </summary>
 public static class GameController
 {
+    private const int _drawWinnerValue = -1;
     private const int _maxBoardDimension = 10_000;
     private const int _minPlayers = 2;
     private const int _maxPlayers = 1000;
@@ -128,16 +129,49 @@ public static class GameController
 
     private static GameDto ToDto(GameModel game)
     {
+        var orderedPlayers = game.GamePlayers
+            .OrderBy(x => x.TurnOrder)
+            .Select(x => x.Player)
+            .ToArray();
+        var isGameOver = GameRules.IsGameOver(game.Board);
+        var winnerValue = NormalizeWinnerValue(GameRules.GetWinner(game.Board), isGameOver);
+        var winnerPlayerId = ResolveWinnerPlayerId(orderedPlayers, winnerValue);
+
         return new GameDto(
             game.Id,
             ToJagged(game.Board),
-            game.GamePlayers
-                .OrderBy(x => x.TurnOrder)
-                .Select(x => x.Player)
+            orderedPlayers
                 .Select(p => new PlayerDto(p.Id, p.IsEngine, p.ExternalId))
                 .ToArray(),
             game.Moves.Select(m => new MoveDto(m.Id, m.X, m.Y, m.Value, m.MoveNumber)).ToArray(),
-            game.WaitingForPlayerId);
+            game.WaitingForPlayerId,
+            new GameStateDto(isGameOver, winnerValue, winnerPlayerId));
+    }
+
+    private static int? NormalizeWinnerValue(int? winnerValue, bool isGameOver)
+    {
+        if (winnerValue.HasValue)
+        {
+            return winnerValue.Value;
+        }
+
+        return isGameOver ? _drawWinnerValue : null;
+    }
+
+    private static Guid? ResolveWinnerPlayerId(PlayerModel[] orderedPlayers, int? winnerValue)
+    {
+        if (!winnerValue.HasValue)
+        {
+            return null;
+        }
+
+        var winnerIndex = winnerValue.Value - 1;
+        if (winnerIndex < 0 || winnerIndex >= orderedPlayers.Length)
+        {
+            return null;
+        }
+
+        return orderedPlayers[winnerIndex].Id;
     }
 
     private static int[][] ToJagged(int[,]? board)

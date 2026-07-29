@@ -8,9 +8,11 @@ namespace TikTakToe.Models.Dto;
 /// <param name="Players">The players in the game.</param>
 /// <param name="Moves">The moves made in the game.</param>
 /// <param name="WaitingForPlayerId">The ID of the player whose turn it is, or null if the game is over.</param>
+/// <param name="State">Terminal state information (game over and winner markers).</param>
 public sealed record GameDto(
     Guid Id,
     int[][] Board,
     PlayerDto[] Players,
     MoveDto[] Moves,
-    Guid? WaitingForPlayerId);
+    Guid? WaitingForPlayerId,
+    GameStateDto State);

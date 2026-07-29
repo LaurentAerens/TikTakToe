@@ -1,6 +1,7 @@
 namespace TikTakToe.Tests.Services;
 
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using TikTakToe.Data;
 using TikTakToe.Models;
 using TikTakToe.Services;
@@ -12,7 +13,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 2);
 
         var game = await service.CreateAsync(3, 4, playerIds);
@@ -44,7 +46,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 2);
 
         var invalidRowsException = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.CreateAsync(0, 3, playerIds));
@@ -61,7 +64,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 2);
 
         var createdGame = await service.CreateAsync(2, 2, playerIds);
@@ -80,7 +84,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
 
         var game = await service.GetAsync(Guid.NewGuid());
 
@@ -92,7 +97,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var sourcePlayerId = (await SeedPlayersAsync(dbContext, 1))[0];
 
         var firstGame = await service.CreateAsync(3, 3, [sourcePlayerId]);
@@ -121,7 +127,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 1);
         var unknownId = Guid.NewGuid();
 
@@ -136,7 +143,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 2);
 
         var game = await service.CreateAsync(3, 3, playerIds);
@@ -154,13 +162,14 @@ public sealed class GameServiceTests
     }
 
     [Fact]
-    public async Task MakeMoveAsync_WithValidEngineMove_AppliesAndRecordsMove()
+    public async Task ApplyEngineTurnAsync_WithValidEngineMove_AppliesAndRecordsMove()
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
         await provider.EnsureCapabilitiesAsync();
 
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var capabilities = await provider.ListCapabilitiesAsync();
         var enginePlayerId = capabilities.First(x => x.DisplayName == "Random").PlayerId;
         var humanPlayerIds = await SeedPlayersAsync(dbContext, 1);
@@ -168,13 +177,12 @@ public sealed class GameServiceTests
         // Game with Human player 1 (starts) and Random Engine player 2
         var game = await service.CreateAsync(3, 3, [humanPlayerIds[0], enginePlayerId]);
         var humanInGameId = game.Players[0].Id;
-        var engineInGameId = game.Players[1].Id;
 
         // Player 1 (human) moves first
         game = await service.MakeMoveAsync(game.Id, humanInGameId, 0, 0);
 
-        // Player 2 (engine) turn
-        var updatedGame = await service.MakeMoveAsync(game.Id, engineInGameId, null, null);
+        // Player 2 (engine) turn via ApplyEngineTurnAsync
+        var updatedGame = await service.ApplyEngineTurnAsync(game.Id);
 
         Assert.Equal(2, updatedGame.Moves.Count);
         var engineMove = updatedGame.Moves[1];
@@ -189,7 +197,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 2);
 
         var game = await service.CreateAsync(3, 3, playerIds);
@@ -203,7 +212,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 2);
 
         var game = await service.CreateAsync(3, 3, playerIds);
@@ -221,7 +231,8 @@ public sealed class GameServiceTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new EngineLookupProvider(dbContext);
-        var service = new GameService(dbContext, provider);
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
         var playerIds = await SeedPlayersAsync(dbContext, 2);
 
         var game = await service.CreateAsync(3, 3, playerIds);
@@ -296,6 +307,77 @@ public sealed class GameServiceTests
         Assert.Null(GameRules.GetWinner(board5));
         Assert.False(GameRules.IsBoardFull(board5));
         Assert.False(GameRules.IsGameOver(board5));
+    }
+
+    [Fact]
+    public async Task MakeMoveAsync_WhenEngineTurn_ThrowsInvalidOperationException()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        var service = new GameService(dbContext, provider, mockQueue.Object);
+        var capabilities = await provider.ListCapabilitiesAsync();
+        var enginePlayerId = capabilities.First(x => x.DisplayName == "Random").PlayerId;
+        var humanPlayerIds = await SeedPlayersAsync(dbContext, 1);
+
+        // Game with Engine player 1 (starts) and Human player 2
+        var game = await service.CreateAsync(3, 3, [enginePlayerId, humanPlayerIds[0]]);
+        var humanInGameId = game.Players[1].Id;
+
+        // Try to make a move when it's the engine's turn - should throw
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.MakeMoveAsync(game.Id, humanInGameId, 0, 0));
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithEngineFirst_EnqueuesJob()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        mockQueue.Setup(q => q.TryEnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var service = new GameService(dbContext, provider, mockQueue.Object);
+        var capabilities = await provider.ListCapabilitiesAsync();
+        var enginePlayerId = capabilities.First(x => x.DisplayName == "Random").PlayerId;
+        var humanPlayerIds = await SeedPlayersAsync(dbContext, 1);
+
+        // Game with Engine player 1 (starts)
+        var game = await service.CreateAsync(3, 3, [enginePlayerId, humanPlayerIds[0]]);
+
+        // Verify enqueue was called
+        mockQueue.Verify(q => q.TryEnqueueAsync(game.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MakeMoveAsync_WithHumanMove_EnqueuesWhenNextIsEngine()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var mockQueue = new Mock<IEngineMoveQueue>();
+        mockQueue.Setup(q => q.TryEnqueueAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var service = new GameService(dbContext, provider, mockQueue.Object);
+        var capabilities = await provider.ListCapabilitiesAsync();
+        var enginePlayerId = capabilities.First(x => x.DisplayName == "Random").PlayerId;
+        var humanPlayerIds = await SeedPlayersAsync(dbContext, 1);
+
+        // Game with Human player 1 (starts) and Engine player 2
+        var game = await service.CreateAsync(3, 3, [humanPlayerIds[0], enginePlayerId]);
+        var humanInGameId = game.Players[0].Id;
+
+        // Human moves, next is engine
+        await service.MakeMoveAsync(game.Id, humanInGameId, 0, 0);
+
+        // Verify enqueue was called
+        mockQueue.Verify(q => q.TryEnqueueAsync(game.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static GameDbContext CreateDbContext()

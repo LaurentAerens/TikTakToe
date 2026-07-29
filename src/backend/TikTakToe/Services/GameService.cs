@@ -9,7 +9,7 @@ using TikTakToe.Models;
 /// <summary>
 /// Default implementation for game persistence orchestration.
 /// </summary>
-public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider engineLookupProvider) : IGameService
+public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider engineLookupProvider, IEngineMoveQueue engineMoveQueue) : IGameService
 {
     /// <inheritdoc />
     public async Task<GameModel> CreateAsync(int rows, int cols, IReadOnlyList<Guid> playerIds, CancellationToken cancellationToken = default)
@@ -70,6 +70,9 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
             .OrderBy(x => x.TurnOrder)
             .ToList();
 
+        // Enqueue if the first player is an engine
+        await EnqueueIfEngineTurnAsync(game, orderedSourcePlayers, cancellationToken);
+
         return game;
     }
 
@@ -91,7 +94,7 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
     }
 
     /// <inheritdoc />
-    public async Task<GameModel> MakeMoveAsync(Guid gameId, Guid playerId, int? x, int? y, CancellationToken cancellationToken = default)
+    public async Task<GameModel> MakeMoveAsync(Guid gameId, Guid playerId, int x, int y, CancellationToken cancellationToken = default)
     {
         var game = await dbContext.Games
             .Include(x => x.GamePlayers)
@@ -139,91 +142,155 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
             throw new InvalidOperationException($"It is not player {playerId}'s turn.");
         }
 
+        // Reject engine moves - they are handled by the background worker
+        if (expectedPlayer.IsEngine)
+        {
+            throw new InvalidOperationException("Engine moves are automatic and cannot be submitted via the API.");
+        }
+
         var rows = board.GetLength(0);
         var cols = board.GetLength(1);
 
-        int moveX;
-        int moveY;
+        // Human player move validation
+        if (x < 0 || x >= rows || y < 0 || y >= cols)
+        {
+            throw new ArgumentOutOfRangeException(null, "Coordinates are out of board boundaries.");
+        }
+
+        if (board[x, y] != 0)
+        {
+            throw new InvalidOperationException("Cell is already occupied.");
+        }
+
+        // Apply the human move
+        var playerValue = nextPlayerIndex + 1;
+        board[x, y] = playerValue;
+
+        // Record the move
+        var move = new MoveModel
+        {
+            Id = Guid.NewGuid(),
+            GameId = game.Id,
+            X = x,
+            Y = y,
+            Value = playerValue,
+            MoveNumber = game.Moves.Count + 1,
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        dbContext.Moves.Add(move);
+        game.UpdatedAtUtc = DateTime.UtcNow;
+
+        // Update whose turn it is (null when the game is now over)
+        UpdateWaitingForPlayer(game, orderedPlayers, move.MoveNumber);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Enqueue if the next player is an engine
+        await EnqueueIfEngineTurnAsync(game, orderedPlayers, cancellationToken);
+
+        return game;
+    }
+
+    /// <inheritdoc />
+    public async Task<GameModel> ApplyEngineTurnAsync(Guid gameId, CancellationToken cancellationToken = default)
+    {
+        var game = await dbContext.Games
+            .Include(x => x.GamePlayers)
+            .ThenInclude(x => x.Player)
+            .Include(x => x.Moves)
+            .SingleOrDefaultAsync(g => g.Id == gameId, cancellationToken);
+
+        var orderedPlayers = game?.GamePlayers
+            .OrderBy(x => x.TurnOrder)
+            .Select(x => x.Player)
+            .ToList();
+
+        if (game is null)
+        {
+            throw new KeyNotFoundException($"Game with ID {gameId} not found.");
+        }
+
+        if (orderedPlayers is null || orderedPlayers.Count == 0)
+        {
+            throw new InvalidOperationException("Game has no registered players.");
+        }
+
+        var board = game.Board ?? throw new InvalidOperationException("Game board is unavailable.");
+
+        // Determine if game is already over
+        if (GameRules.IsGameOver(board))
+        {
+            // Game is over, no-op
+            return game;
+        }
+
+        // Whose turn is it?
+        var nextPlayerIndex = game.Moves.Count % orderedPlayers.Count;
+        var expectedPlayer = orderedPlayers[nextPlayerIndex];
+
+        // Verify it's an engine's turn
+        if (!expectedPlayer.IsEngine)
+        {
+            // Not an engine's turn anymore (human moved concurrently), no-op
+            return game;
+        }
+
+        if (string.IsNullOrWhiteSpace(expectedPlayer.ExternalId) || !Guid.TryParse(expectedPlayer.ExternalId, out var engineId))
+        {
+            throw new InvalidOperationException($"Engine player {expectedPlayer.Id} does not have a valid engine ID in ExternalId.");
+        }
+
+        var engine = await engineLookupProvider.CreateEngineByIdAsync(engineId, cancellationToken);
+        if (engine is null)
+        {
+            throw new InvalidOperationException($"Engine with ID {engineId} could not be instantiated.");
+        }
+
+        var rows = board.GetLength(0);
+        var cols = board.GetLength(1);
         var playerValue = nextPlayerIndex + 1;
 
-        if (expectedPlayer.IsEngine)
+        // Save copy of current board to compare and find the chosen coordinates
+        var oldBoard = (int[,])board.Clone();
+
+        // Run engine to determine the move
+        var (newBoard, _) = engine.Move(oldBoard, playerValue);
+
+        // Verify the new board is valid
+        if (newBoard is null || newBoard.GetLength(0) != rows || newBoard.GetLength(1) != cols)
         {
-            if (string.IsNullOrWhiteSpace(expectedPlayer.ExternalId) || !Guid.TryParse(expectedPlayer.ExternalId, out var engineId))
+            throw new InvalidOperationException("Engine returned an invalid board.");
+        }
+
+        // Find where the move was placed
+        int moveX = -1;
+        int moveY = -1;
+        for (var r = 0; r < rows; r++)
+        {
+            for (var c = 0; c < cols; c++)
             {
-                throw new InvalidOperationException($"Engine player {expectedPlayer.Id} does not have a valid engine ID in ExternalId.");
-            }
-
-            var engine = await engineLookupProvider.CreateEngineByIdAsync(engineId, cancellationToken);
-            if (engine is null)
-            {
-                throw new InvalidOperationException($"Engine with ID {engineId} could not be instantiated.");
-            }
-
-            // Save copy of current board to compare and find the chosen coordinates
-            var oldBoard = (int[,])board.Clone();
-
-            // Run engine to determine the move
-            var (newBoard, _) = engine.Move(oldBoard, playerValue);
-
-            // Verify the new board is valid
-            if (newBoard is null || newBoard.GetLength(0) != rows || newBoard.GetLength(1) != cols)
-            {
-                throw new InvalidOperationException("Engine returned an invalid board.");
-            }
-
-            // Find where the move was placed
-            moveX = -1;
-            moveY = -1;
-            for (var r = 0; r < rows; r++)
-            {
-                for (var c = 0; c < cols; c++)
+                if (oldBoard[r, c] == 0 && newBoard[r, c] == playerValue)
                 {
-                    if (oldBoard[r, c] == 0 && newBoard[r, c] == playerValue)
-                    {
-                        moveX = r;
-                        moveY = c;
-                        break;
-                    }
-                }
-
-                if (moveX != -1)
-                {
+                    moveX = r;
+                    moveY = c;
                     break;
                 }
             }
 
-            if (moveX == -1 || moveY == -1)
+            if (moveX != -1)
             {
-                throw new InvalidOperationException("Engine did not make a valid move.");
+                break;
             }
-
-            // Update game board state
-            game.Board = newBoard;
         }
-        else
+
+        if (moveX == -1 || moveY == -1)
         {
-            // Human player move validation
-            if (!x.HasValue || !y.HasValue)
-            {
-                throw new ArgumentException("Coordinates x and y are required for human player moves.");
-            }
-
-            moveX = x.Value;
-            moveY = y.Value;
-
-            if (moveX < 0 || moveX >= rows || moveY < 0 || moveY >= cols)
-            {
-                throw new ArgumentOutOfRangeException(null, "Coordinates are out of board boundaries.");
-            }
-
-            if (board[moveX, moveY] != 0)
-            {
-                throw new InvalidOperationException("Cell is already occupied.");
-            }
-
-            // Update game board state
-            board[moveX, moveY] = playerValue;
+            throw new InvalidOperationException("Engine did not make a valid move.");
         }
+
+        // Update game board state
+        game.Board = newBoard;
 
         // Record the move
         var move = new MoveModel
@@ -241,17 +308,37 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
         game.UpdatedAtUtc = DateTime.UtcNow;
 
         // Update whose turn it is (null when the game is now over)
+        UpdateWaitingForPlayer(game, orderedPlayers, move.MoveNumber);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return game;
+    }
+
+    private static void UpdateWaitingForPlayer(GameModel game, List<PlayerModel> orderedPlayers, int moveNumber)
+    {
         if (GameRules.IsGameOver(game.Board))
         {
             game.WaitingForPlayerId = null;
         }
         else
         {
-            var nextIndex = move.MoveNumber % orderedPlayers.Count;
+            var nextIndex = moveNumber % orderedPlayers.Count;
             game.WaitingForPlayerId = orderedPlayers[nextIndex].Id;
         }
+    }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return game;
+    private async Task EnqueueIfEngineTurnAsync(GameModel game, List<PlayerModel> orderedPlayers, CancellationToken cancellationToken)
+    {
+        if (game.WaitingForPlayerId is null)
+        {
+            return; // Game over
+        }
+
+        var waitingPlayer = orderedPlayers.FirstOrDefault(p => p.Id == game.WaitingForPlayerId.Value);
+        if (waitingPlayer is not null && waitingPlayer.IsEngine)
+        {
+            await engineMoveQueue.TryEnqueueAsync(game.Id, cancellationToken);
+        }
     }
 }
