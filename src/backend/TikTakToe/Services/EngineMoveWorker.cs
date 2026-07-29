@@ -21,13 +21,13 @@ public sealed class EngineMoveWorker(
         logger.LogInformation("EngineMoveWorker starting.");
 
         // Perform startup recovery
-        await PerformStartupRecoveryAsync(stoppingToken);
+        await this.PerformStartupRecoveryAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await ProcessNextJobAsync(stoppingToken);
+                await this.ProcessNextJobAsync(stoppingToken);
             }
             catch (OperationCanceledException)
             {

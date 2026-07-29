@@ -71,7 +71,7 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
             .ToList();
 
         // Enqueue if the first player is an engine
-        await EnqueueIfEngineTurnAsync(game, orderedSourcePlayers, cancellationToken);
+        await this.EnqueueIfEngineTurnAsync(game, orderedSourcePlayers, cancellationToken);
 
         return game;
     }
@@ -187,7 +187,7 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
         await dbContext.SaveChangesAsync(cancellationToken);
 
         // Enqueue if the next player is an engine
-        await EnqueueIfEngineTurnAsync(game, orderedPlayers, cancellationToken);
+        await this.EnqueueIfEngineTurnAsync(game, orderedPlayers, cancellationToken);
 
         return game;
     }
