@@ -156,8 +156,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          DIAGNOSTIC_COUNT=$(grep -E -c '\bSA[0-9]{4}\b' build-output.log || true)
-          UNIQUE_RULE_COUNT=$( (grep -E -o '\bSA[0-9]{4}\b' build-output.log || true) | sort -u | wc -l | tr -d ' ')
+          DIAGNOSTIC_COUNT=$(grep -E -c ':\s*(warning|error)\s+SA[0-9]{4}:' build-output.log || true)
+          UNIQUE_RULE_COUNT=$( (grep -E ':\s*(warning|error)\s+SA[0-9]{4}:' build-output.log || true) | grep -E -o '\bSA[0-9]{4}\b' | sort -u | wc -l | tr -d ' ')
 
           echo "## StyleCop Analyzer" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ steps.stylecop_build.outcome }}" = "success" ]; then
@@ -181,8 +181,8 @@ jobs:
             STATUS_TEXT="FAIL"
           fi
 
-          DIAGNOSTIC_COUNT=$(grep -E -c '\bSA[0-9]{4}\b' build-output.log || true)
-          TOP_RULES=$( (grep -E -o '\bSA[0-9]{4}\b' build-output.log || true) | sort | uniq -c | sort -nr | head -n 10 | awk '{print "- " $2 ": " $1 " occurrences"}')
+          DIAGNOSTIC_COUNT=$(grep -E -c ':\s*(warning|error)\s+SA[0-9]{4}:' build-output.log || true)
+          TOP_RULES=$( (grep -E ':\s*(warning|error)\s+SA[0-9]{4}:' build-output.log || true) | grep -E -o '\bSA[0-9]{4}\b' | sort | uniq -c | sort -nr | head -n 10 | awk '{print "- " $2 ": " $1 " occurrences"}')
 
           {
             echo 'comment_body<<EOF'

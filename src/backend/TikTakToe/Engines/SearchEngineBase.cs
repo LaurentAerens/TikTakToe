@@ -13,13 +13,13 @@ public abstract class SearchEngineBase : IEngine
 {
     private static readonly Random Rng = Random.Shared;
 
-    private readonly IBoardEvaluator _boardEvaluator;
-    private readonly IOpponentStrategy _opponentStrategy;
+    private readonly IBoardEvaluator boardEvaluator;
+    private readonly IOpponentStrategy opponentStrategy;
 
     protected SearchEngineBase(IBoardEvaluator boardEvaluator, IOpponentStrategy opponentStrategy)
     {
-        this._boardEvaluator = boardEvaluator;
-        this._opponentStrategy = opponentStrategy;
+        this.boardEvaluator = boardEvaluator;
+        this.opponentStrategy = opponentStrategy;
     }
 
     public (int[,] Board, int Score) Move(int[,] board, int player, int? depth = null)
@@ -171,7 +171,7 @@ public abstract class SearchEngineBase : IEngine
 
     private (int[,] Board, int Score) SearchRecursive(int[,] board, int player, int depth, int enginePlayer)
     {
-        var score = this._boardEvaluator.Evaluate(board);
+        var score = this.boardEvaluator.Evaluate(board);
         if (score == 1000 || score == -1000)
         {
             return (board, score);
@@ -195,7 +195,7 @@ public abstract class SearchEngineBase : IEngine
             childScores[i] = moveScore;
         }
 
-        var aggregated = this._opponentStrategy.AggregateScores(childScores, player, enginePlayer);
+        var aggregated = this.opponentStrategy.AggregateScores(childScores, player, enginePlayer);
         return (moves[0], aggregated);
     }
 }
