@@ -35,8 +35,8 @@ while (true)
         "9" => new DisconnicamentEngine(),
         "10" => new BlindsightEngine(),
         "11" => new SightlineEngine(),
-        "12" => new HalfSightEngine(),
-        "13" => new HalfBlindEngine(),
+        "12" => new HalfsightEngine(),
+        "13" => new HalfblindEngine(),
         _ => new RandomEngine(),
     };
 
