@@ -8,17 +8,46 @@ public sealed class DepthDiscountOpponentStrategy : IOpponentStrategy
 {
     public int AggregateScores(IReadOnlyList<int> scores, int currentPlayer, int enginePlayer)
     {
+        var adjustedScores = scores.Select(score =>
+        {
+            if (enginePlayer == 1 && score < 0)
+            {
+                return score * 5;
+            }
+
+            if (enginePlayer == 2 && score > 0)
+            {
+                return score * 5;
+            }
+
+            return score;
+        }).ToList();
+
         if (currentPlayer == enginePlayer)
         {
             if (enginePlayer == 1)
             {
-                return scores.Select(score => score > 0 ? ReducePositiveScore(score) : score).Max();
+                return adjustedScores.Select(score => score > 0 ? ReducePositiveScore(score) : score).Max();
             }
 
-            return scores.Select(score => score < 0 ? ReduceNegativeScore(score) : score).Min();
+            return adjustedScores.Select(score => score < 0 ? ReduceNegativeScore(score) : score).Min();
         }
 
-        return (int)Math.Round(scores.Average(score => (double)score));
+        var average = adjustedScores.Average(score => (double)score);
+        var shouldPenalize = (enginePlayer == 1 && average > 0) || (enginePlayer == 2 && average < 0);
+        if (shouldPenalize)
+        {
+            var best = enginePlayer == 1 ? adjustedScores.Max() : adjustedScores.Min();
+            var worst = enginePlayer == 1 ? adjustedScores.Min() : adjustedScores.Max();
+            var spread = Math.Abs(best - worst);
+            if (spread > 0)
+            {
+                var penalty = (int)Math.Round(spread * 0.1);
+                return enginePlayer == 1 ? (int)Math.Round(average - penalty) : (int)Math.Round(average + penalty);
+            }
+        }
+
+        return (int)Math.Round(average);
     }
 
     private static int ReducePositiveScore(int score)
