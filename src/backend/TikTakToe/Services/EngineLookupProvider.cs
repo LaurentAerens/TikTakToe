@@ -24,18 +24,18 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
         new("Random", 10000, 10000, false, () => new RandomEngine()),
     ];
 
-    private readonly GameDbContext _dbContext;
+    private readonly GameDbContext dbContext;
 
     public EngineLookupProvider(GameDbContext dbContext)
     {
-        this._dbContext = dbContext;
+        this.dbContext = dbContext;
     }
 
     public async Task EnsureCapabilitiesAsync(CancellationToken cancellationToken = default)
     {
         ValidateUniqueRegistrationDisplayNames();
 
-        var existing = await this._dbContext.EngineCapabilities
+        var existing = await this.dbContext.EngineCapabilities
             .ToListAsync(cancellationToken);
 
         var existingByDisplayName = new Dictionary<string, EngineCapabilityModel>(StringComparer.Ordinal);
@@ -69,7 +69,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
                 continue;
             }
 
-            this._dbContext.EngineCapabilities.Add(new EngineCapabilityModel
+            this.dbContext.EngineCapabilities.Add(new EngineCapabilityModel
             {
                 Id = Guid.NewGuid(),
                 DisplayName = registration.DisplayName,
@@ -83,7 +83,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
         if (hasChanges)
         {
-            await this._dbContext.SaveChangesAsync(cancellationToken);
+            await this.dbContext.SaveChangesAsync(cancellationToken);
         }
 
         await this.EnsureEnginePlayersAsync(cancellationToken);
@@ -91,7 +91,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
     public async Task<IReadOnlyList<EngineCapabilityWithPlayerModel>> ListCapabilitiesAsync(CancellationToken cancellationToken = default)
     {
-        var capabilities = await this._dbContext.EngineCapabilities
+        var capabilities = await this.dbContext.EngineCapabilities
             .AsNoTracking()
             .OrderBy(x => x.DisplayName)
             .ToListAsync(cancellationToken);
@@ -104,7 +104,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
     public async Task<EngineCapabilityWithPlayerModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var capability = await this._dbContext.EngineCapabilities
+        var capability = await this.dbContext.EngineCapabilities
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -119,7 +119,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
     public async Task<EngineCapabilityWithPlayerModel?> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
     {
-        var player = await this._dbContext.Players
+        var player = await this.dbContext.Players
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == playerId && x.IsEngine, cancellationToken);
 
@@ -148,7 +148,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
     public async Task<EngineCapabilityWithPlayerModel?> GetByDisplayNameAsync(string displayName, CancellationToken cancellationToken = default)
     {
         var normalizedDisplayName = EngineDisplayNameNormalizer.Normalize(displayName);
-        var capability = await this._dbContext.EngineCapabilities
+        var capability = await this.dbContext.EngineCapabilities
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.NormalizedDisplayName == normalizedDisplayName, cancellationToken);
 
@@ -251,11 +251,11 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
     private async Task EnsureEnginePlayersAsync(CancellationToken cancellationToken)
     {
-        var capabilities = await this._dbContext.EngineCapabilities
+        var capabilities = await this.dbContext.EngineCapabilities
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var existingEnginePlayers = await this._dbContext.Players
+        var existingEnginePlayers = await this.dbContext.Players
             .Where(x => x.IsEngine)
             .ToListAsync(cancellationToken);
 
@@ -288,7 +288,7 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
                 continue;
             }
 
-            this._dbContext.Players.Add(new PlayerModel
+            this.dbContext.Players.Add(new PlayerModel
             {
                 Id = Guid.NewGuid(),
                 IsEngine = true,
@@ -299,13 +299,13 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
         if (hasChanges)
         {
-            await this._dbContext.SaveChangesAsync(cancellationToken);
+            await this.dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 
     private async Task<Dictionary<string, PlayerModel>> GetEnginePlayersByExternalIdAsync(CancellationToken cancellationToken)
     {
-        var enginePlayers = await this._dbContext.Players
+        var enginePlayers = await this.dbContext.Players
             .AsNoTracking()
             .Where(x => x.IsEngine && x.ExternalId != null)
             .ToListAsync(cancellationToken);

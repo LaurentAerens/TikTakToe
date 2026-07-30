@@ -13,7 +13,7 @@ public sealed class DatabaseInitializationService(GameDbContext dbContext)
     /// </summary>
     /// <param name="resetDatabaseOnStartup">When true, clears application data after migrations are applied.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task InitializeAsync(bool resetDatabaseOnStartup, CancellationToken cancellationToken = default)
     {
         await dbContext.Database.MigrateAsync(cancellationToken);

@@ -11,9 +11,9 @@ using TikTakToe.Services;
 /// </summary>
 public static class GameController
 {
-    private const int _maxBoardDimension = 10_000;
-    private const int _minPlayers = 2;
-    private const int _maxPlayers = 1000;
+    private const int MaxBoardDimension = 10_000;
+    private const int MinPlayers = 2;
+    private const int MaxPlayers = 1000;
 
     /// <summary>
     /// Maps game controller routes to the application.
@@ -27,17 +27,17 @@ public static class GameController
             var cols = request.Cols <= 0 ? 3 : request.Cols;
             var playerIds = request.PlayerIds;
 
-            if (rows > _maxBoardDimension || cols > _maxBoardDimension)
+            if (rows > MaxBoardDimension || cols > MaxBoardDimension)
             {
                 return Results.BadRequest(
                     ApiResponse<GameDto>.Fail(
-                        $"Board dimensions must be less than or equal to {_maxBoardDimension}. Requested rows={rows}, cols={cols}."));
+                        $"Board dimensions must be less than or equal to {MaxBoardDimension}. Requested rows={rows}, cols={cols}."));
             }
 
-            if (playerIds is null || playerIds.Length < _minPlayers || playerIds.Length > _maxPlayers)
+            if (playerIds is null || playerIds.Length < MinPlayers || playerIds.Length > MaxPlayers)
             {
                 return Results.BadRequest(
-                    ApiResponse<GameDto>.Fail($"A game requires between {_minPlayers} and {_maxPlayers} player ids."));
+                    ApiResponse<GameDto>.Fail($"A game requires between {MinPlayers} and {MaxPlayers} player ids."));
             }
 
             try
