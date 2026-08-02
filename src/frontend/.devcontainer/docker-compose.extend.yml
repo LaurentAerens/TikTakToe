@@ -1,0 +1,11 @@
+services:
+  frontend-dev:
+    profiles: !override []
+    volumes:
+      - vscode-server-frontend:/home/node/.vscode-server
+
+  backend-dev:
+    profiles: !override []
+
+volumes:
+  vscode-server-frontend:
