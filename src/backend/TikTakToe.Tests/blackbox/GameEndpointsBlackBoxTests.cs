@@ -277,6 +277,55 @@ public sealed class GameEndpointsBlackBoxTests(BlackBoxComposeFixture fixture)
         }
     }
 
+    [BlackBoxFact]
+    public async Task EngineFirst_ThenHumanMove_EngineProcessesBothTurns()
+    {
+        using var client = new HttpClient { BaseAddress = fixture.BaseAddress };
+
+        // Create a human player and pick one engine player.
+        var humanPlayerId = await CreateHumanPlayerAsync(client);
+        var enginePlayerId = (await GetEnginePlayerIdsAsync(client, 1)).Single();
+
+        // Engine goes first.
+        var createPayload = new { rows = 3, cols = 3, playerIds = new[] { enginePlayerId, humanPlayerId } };
+        using var createResponse = await client.PostAsJsonAsync("/games", createPayload);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        await using var createStream = await createResponse.Content.ReadAsStreamAsync();
+        using var createDocument = await JsonDocument.ParseAsync(createStream);
+        var gameId = createDocument.RootElement.GetProperty("data").GetProperty("id").GetGuid();
+
+        // First assertion: engine should make the first move automatically.
+        var afterEngineFirstMove = await WaitForGameStateAsync(
+            client,
+            gameId,
+            state => state.GetProperty("moves").GetArrayLength() >= 1,
+            TimeSpan.FromSeconds(10));
+
+        Assert.Equal(1, afterEngineFirstMove.GetProperty("moves").GetArrayLength());
+        Assert.Equal(humanPlayerId, afterEngineFirstMove.GetProperty("waitingForPlayerId").GetGuid());
+
+        // Human plays, then engine should respond automatically.
+        using var humanMoveRequest = new HttpRequestMessage(HttpMethod.Post, $"/games/{gameId}/moves")
+        {
+            Content = JsonContent.Create(new { x = 0, y = 0 }),
+        };
+        humanMoveRequest.Headers.Add("X-Player-Id", humanPlayerId.ToString());
+
+        using var humanMoveResponse = await client.SendAsync(humanMoveRequest);
+        Assert.Equal(HttpStatusCode.OK, humanMoveResponse.StatusCode);
+
+        // Second assertion: total moves should become 3 (engine first, human, engine response).
+        var afterEngineSecondMove = await WaitForGameStateAsync(
+            client,
+            gameId,
+            state => state.GetProperty("moves").GetArrayLength() >= 3,
+            TimeSpan.FromSeconds(10));
+
+        Assert.Equal(3, afterEngineSecondMove.GetProperty("moves").GetArrayLength());
+        Assert.Equal(humanPlayerId, afterEngineSecondMove.GetProperty("waitingForPlayerId").GetGuid());
+    }
+
     private static async Task<Guid[]> GetEnginePlayerIdsAsync(HttpClient client, int count)
     {
         using var enginesResponse = await client.GetAsync("/engines");
@@ -303,6 +352,46 @@ public sealed class GameEndpointsBlackBoxTests(BlackBoxComposeFixture fixture)
             .Single(x => string.Equals(x.GetProperty("displayName").GetString(), displayName, StringComparison.Ordinal));
 
         return engine.GetProperty("id").GetGuid();
+    }
+
+    private static async Task<Guid> CreateHumanPlayerAsync(HttpClient client)
+    {
+        string? externalId = null;
+        var payload = new { isEngine = false, externalId };
+        using var response = await client.PostAsJsonAsync("/players", payload);
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(stream);
+        return document.RootElement.GetProperty("data").GetGuid();
+    }
+
+    private static async Task<JsonElement> WaitForGameStateAsync(
+        HttpClient client,
+        Guid gameId,
+        Func<JsonElement, bool> predicate,
+        TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            using var response = await client.GetAsync($"/games/{gameId}");
+            response.EnsureSuccessStatusCode();
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            using var document = await JsonDocument.ParseAsync(stream);
+            var gameState = document.RootElement.GetProperty("data");
+
+            if (predicate(gameState))
+            {
+                return gameState.Clone();
+            }
+
+            await Task.Delay(150);
+        }
+
+        throw new TimeoutException($"Game {gameId} did not reach expected state within {timeout.TotalSeconds} seconds.");
     }
 
     private static async Task<int> ReadEvalScoreAsync(HttpResponseMessage response)

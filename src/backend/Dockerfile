@@ -23,6 +23,9 @@ RUN dotnet publish TikTakToe/TikTakToe.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
+# Required by Npgsql native auth probing on Alpine.
+RUN apk add --no-cache krb5-libs=1.22.1-r0
+
 # Create non-root user
 RUN addgroup --system --gid 1001 appgroup \
     && adduser --system --uid 1001 --ingroup appgroup appuser

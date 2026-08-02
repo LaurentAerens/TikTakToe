@@ -28,7 +28,9 @@ builder.Services.AddDbContext<GameDbContext>((serviceProvider, options) =>
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IEvalService, EvalService>();
 builder.Services.AddScoped<IEngineLookupProvider, EngineLookupProvider>();
+builder.Services.AddScoped<IEngineMoveQueue, EngineMoveQueue>();
 builder.Services.AddScoped<DatabaseInitializationService>();
+builder.Services.AddHostedService<EngineMoveWorker>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

@@ -40,6 +40,11 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
     /// </summary>
     public DbSet<EngineCapabilityModel> EngineCapabilities => this.Set<EngineCapabilityModel>();
 
+    /// <summary>
+    /// Gets engine move jobs.
+    /// </summary>
+    public DbSet<EngineMoveJobModel> EngineMoveJobs => this.Set<EngineMoveJobModel>();
+
     /// <inheritdoc />
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -138,6 +143,42 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         engineCapability.Property(x => x.Depth).HasColumnName("depth");
         engineCapability.HasIndex(x => x.DisplayName).IsUnique();
         engineCapability.HasIndex(x => x.NormalizedDisplayName).IsUnique();
+
+        var engineMoveJob = modelBuilder.Entity<EngineMoveJobModel>();
+        engineMoveJob.ToTable("engine_move_jobs");
+        engineMoveJob.HasKey(x => x.Id);
+        engineMoveJob.Property(x => x.Id).HasColumnName("id");
+        engineMoveJob.Property(x => x.GameId).HasColumnName("game_id");
+        engineMoveJob.Property(x => x.Status).HasColumnName("status").HasMaxLength(50);
+        engineMoveJob.Property(x => x.AttemptCount).HasColumnName("attempt_count");
+        engineMoveJob.Property(x => x.MaxAttempts).HasColumnName("max_attempts");
+        engineMoveJob.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+        engineMoveJob.Property(x => x.AvailableAtUtc).HasColumnName("available_at_utc");
+        engineMoveJob.Property(x => x.StartedAtUtc).HasColumnName("started_at_utc");
+        engineMoveJob.Property(x => x.CompletedAtUtc).HasColumnName("completed_at_utc");
+        engineMoveJob.Property(x => x.LastError).HasColumnName("last_error");
+        engineMoveJob.Property(x => x.LeaseOwner).HasColumnName("lease_owner").HasMaxLength(256);
+        engineMoveJob.Property(x => x.LeaseExpiresAtUtc).HasColumnName("lease_expires_at_utc");
+
+        // Index for worker poll: pending jobs that are available
+        engineMoveJob.HasIndex(x => new { x.AvailableAtUtc, x.CreatedAtUtc })
+            .HasDatabaseName("IX_engine_move_jobs_available_created")
+            .HasFilter("\"status\" = 'Pending'");
+
+        // Index on game_id for lookups and uniqueness constraint
+        engineMoveJob.HasIndex(x => x.GameId)
+            .HasDatabaseName("IX_engine_move_jobs_game_id");
+
+        // Unique partial index: at most one Pending job per game_id
+        engineMoveJob.HasIndex(x => x.GameId)
+            .HasDatabaseName("UIX_engine_move_jobs_pending_game_id")
+            .IsUnique()
+            .HasFilter("\"status\" = 'Pending'");
+
+        engineMoveJob.HasOne(x => x.Game)
+            .WithMany()
+            .HasForeignKey(x => x.GameId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private static string? SerializeBoard(int[,]? board)
