@@ -19,7 +19,9 @@ while (true)
     Console.WriteLine("9) Disconnicament");
     Console.WriteLine("10) Blindsight");
     Console.WriteLine("11) Sightline");
-    Console.Write("Enter choice (1-11, default 1): ");
+    Console.WriteLine("12) HalfSight");
+    Console.WriteLine("13) HalfBlind");
+    Console.Write("Enter choice (1-13, default 1): ");
     var engineChoice = Console.ReadLine();
     IEngine engine = engineChoice switch
     {
@@ -33,6 +35,8 @@ while (true)
         "9" => new DisconnicamentEngine(),
         "10" => new BlindsightEngine(),
         "11" => new SightlineEngine(),
+        "12" => new HalfsightEngine(),
+        "13" => new HalfblindEngine(),
         _ => new RandomEngine(),
     };
 
