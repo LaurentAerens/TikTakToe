@@ -127,7 +127,7 @@ jobs:
 
       - name: Upload Coverage Report to GitHub Pages
         if: ${{ inputs.run_tests && inputs.is_pull_request }}
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./coverage/report
 
