@@ -24,12 +24,13 @@ public sealed class EngineLookupProviderTests
         Assert.Contains(capabilities, x => x.DisplayName == "Random" && !x.Depth);
         Assert.All(capabilities, x => Assert.NotEqual(Guid.Empty, x.Id));
         Assert.All(capabilities, x => Assert.NotEqual(Guid.Empty, x.PlayerId));
+        Assert.All(capabilities, x => Assert.NotEmpty(x.PlayerOptions));
 
         var enginePlayers = await dbContext.Players.Where(x => x.IsEngine).ToListAsync();
-        Assert.Equal(capabilities.Count, enginePlayers.Count);
+        Assert.Equal(91, enginePlayers.Count);
         foreach (var capability in capabilities)
         {
-            Assert.Contains(enginePlayers, p => p.Id == capability.PlayerId && p.ExternalId == capability.Id.ToString("D"));
+            Assert.Contains(enginePlayers, p => p.Id == capability.PlayerId);
         }
     }
 
@@ -184,6 +185,26 @@ public sealed class EngineLookupProviderTests
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => dbContext.SaveChangesAsync());
         Assert.Contains("already exists", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ResolveEnginePlayerAsync_ReturnsEngineAndDepth()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var classical = await provider.GetByDisplayNameAsync("Classical");
+        Assert.NotNull(classical);
+        Assert.Equal(9, classical!.PlayerOptions.Count);
+
+        var depth2Option = classical.PlayerOptions.Single(o => o.Depth == 2);
+        var resolution = await provider.ResolveEnginePlayerAsync(depth2Option.PlayerId);
+
+        Assert.NotNull(resolution);
+        Assert.NotNull(resolution!.Engine);
+        Assert.Equal("ClassicalEngine", resolution.Engine.GetType().Name);
+        Assert.Equal(2, resolution.Depth);
     }
 
     private static GameDbContext CreateDbContext()

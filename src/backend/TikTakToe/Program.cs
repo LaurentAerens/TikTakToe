@@ -27,6 +27,7 @@ builder.Services.AddDbContext<GameDbContext>((serviceProvider, options) =>
 });
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IEvalService, EvalService>();
+builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IEngineLookupProvider, EngineLookupProvider>();
 builder.Services.AddScoped<IEngineMoveQueue, EngineMoveQueue>();
 builder.Services.AddScoped<DatabaseInitializationService>();
@@ -56,6 +57,7 @@ app.MapHealthController();
 app.MapGameController();
 app.MapEvalController();
 app.MapEngineLookupController();
+app.MapBotController();
 if (exposeApiDocs)
 {
     app.MapOpenApi();

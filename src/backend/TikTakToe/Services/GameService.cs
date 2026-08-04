@@ -236,16 +236,14 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
             return game;
         }
 
-        if (string.IsNullOrWhiteSpace(expectedPlayer.ExternalId) || !Guid.TryParse(expectedPlayer.ExternalId, out var engineId))
+        var engineResolution = await engineLookupProvider.ResolveEnginePlayerAsync(expectedPlayer.Id, cancellationToken);
+        if (engineResolution is null)
         {
-            throw new InvalidOperationException($"Engine player {expectedPlayer.Id} does not have a valid engine ID in ExternalId.");
+            throw new InvalidOperationException($"Engine for player {expectedPlayer.Id} could not be resolved or instantiated.");
         }
 
-        var engine = await engineLookupProvider.CreateEngineByIdAsync(engineId, cancellationToken);
-        if (engine is null)
-        {
-            throw new InvalidOperationException($"Engine with ID {engineId} could not be instantiated.");
-        }
+        var engine = engineResolution.Engine;
+        var depth = engineResolution.Depth;
 
         var rows = board.GetLength(0);
         var cols = board.GetLength(1);
@@ -255,7 +253,7 @@ public sealed class GameService(GameDbContext dbContext, IEngineLookupProvider e
         var oldBoard = (int[,])board.Clone();
 
         // Run engine to determine the move
-        var (newBoard, _) = engine.Move(oldBoard, playerValue);
+        var (newBoard, _) = engine.Move(oldBoard, playerValue, depth: depth);
 
         // Verify the new board is valid
         if (newBoard is null || newBoard.GetLength(0) != rows || newBoard.GetLength(1) != cols)

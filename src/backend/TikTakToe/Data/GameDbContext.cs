@@ -45,6 +45,11 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
     /// </summary>
     public DbSet<EngineMoveJobModel> EngineMoveJobs => this.Set<EngineMoveJobModel>();
 
+    /// <summary>
+    /// Gets bots.
+    /// </summary>
+    public DbSet<BotModel> Bots => this.Set<BotModel>();
+
     /// <inheritdoc />
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -179,6 +184,25 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
             .WithMany()
             .HasForeignKey(x => x.GameId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        var bot = modelBuilder.Entity<BotModel>();
+        bot.ToTable("bots");
+        bot.HasKey(x => x.Id);
+        bot.Property(x => x.Id).HasColumnName("id");
+        bot.Property(x => x.EngineCapabilityId).HasColumnName("engine_capability_id");
+        bot.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(128);
+        bot.Property(x => x.Depth).HasColumnName("depth");
+        bot.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+
+        bot.HasOne(x => x.Player)
+            .WithOne()
+            .HasForeignKey<BotModel>(x => x.Id)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        bot.HasOne(x => x.EngineCapability)
+            .WithMany()
+            .HasForeignKey(x => x.EngineCapabilityId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 
     private static string? SerializeBoard(int[,]? board)
@@ -338,12 +362,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
     {
         foreach (var candidate in engineCandidates)
         {
-            if (!Guid.TryParse(candidate.ExternalId, out var parsed))
-            {
-                throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
-            }
-
-            candidate.ExternalId = parsed.ToString("D");
+            candidate.ExternalId = NormalizeEngineExternalId(candidate.ExternalId);
         }
 
         var duplicateCandidate = engineCandidates
@@ -377,9 +396,23 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
 
     private static string NormalizeEngineExternalId(string? externalId)
     {
-        return Guid.TryParse(externalId, out var parsed)
-            ? parsed.ToString("D")
-            : throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
+        if (string.IsNullOrWhiteSpace(externalId))
+        {
+            throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
+        }
+
+        var parts = externalId.Split(':', 2);
+        if (!Guid.TryParse(parts[0], out var parsedGuid))
+        {
+            throw new InvalidOperationException("Engine players must have a valid engine Guid in ExternalId.");
+        }
+
+        if (parts.Length == 1)
+        {
+            return parsedGuid.ToString("D");
+        }
+
+        return $"{parsedGuid:D}:{parts[1]}";
     }
 
     private void PrepareEngineCapabilities()
@@ -453,7 +486,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         var engineCandidates = this.ChangeTracker.Entries<PlayerModel>()
             .Where(x => x.State is EntityState.Added or EntityState.Modified)
             .Select(x => x.Entity)
-            .Where(x => x.IsEngine)
+            .Where(x => x.IsEngine && x.ExternalId != null)
             .ToArray();
 
         ValidateEnginePlayerCandidateShape(engineCandidates);
@@ -481,7 +514,7 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
         var engineCandidates = this.ChangeTracker.Entries<PlayerModel>()
             .Where(x => x.State is EntityState.Added or EntityState.Modified)
             .Select(x => x.Entity)
-            .Where(x => x.IsEngine)
+            .Where(x => x.IsEngine && x.ExternalId != null)
             .ToArray();
 
         ValidateEnginePlayerCandidateShape(engineCandidates);

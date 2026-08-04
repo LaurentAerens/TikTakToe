@@ -250,6 +250,11 @@ public sealed class EvalServiceTests
             return Task.FromResult<IEngine?>(null);
         }
 
+        public Task<EnginePlayerResolution?> ResolveEnginePlayerAsync(Guid playerId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<EnginePlayerResolution?>(engine is null ? null : new EnginePlayerResolution(engine, null));
+        }
+
         public Task<IReadOnlyCollection<int>> GetSupportedPlayersByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var supportedPlayers = capability?.Id == id ? engine?.SupportedPlayers : null;
