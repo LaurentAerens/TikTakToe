@@ -53,6 +53,71 @@ public sealed class BotServiceTests
         Assert.Contains(bots, b => b.DisplayName == "Random" && b.Depth == null);
     }
 
+    [Fact]
+    public async Task CreateBotAsync_WhenEngineDoesNotSupportDepthAndDepthIsProvided_ThrowsArgumentException()
+    {
+        await using var dbContext = CreateDbContext();
+        var capability = new EngineCapabilityModel
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Random",
+            MaxBoardSizeX = 10000,
+            MaxBoardSizeY = 10000,
+            Depth = false,
+        };
+        dbContext.EngineCapabilities.Add(capability);
+        await dbContext.SaveChangesAsync();
+
+        var service = new BotService(dbContext);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateBotAsync(capability.Id, "Random Bot", depth: 2));
+        Assert.Contains("does not support a depth setting", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateBotAsync_WhenEngineRequiresDepthAndDepthIsNull_ThrowsArgumentException()
+    {
+        await using var dbContext = CreateDbContext();
+        var capability = new EngineCapabilityModel
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Classical",
+            MaxBoardSizeX = 3,
+            MaxBoardSizeY = 3,
+            Depth = true,
+        };
+        dbContext.EngineCapabilities.Add(capability);
+        await dbContext.SaveChangesAsync();
+
+        var service = new BotService(dbContext);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateBotAsync(capability.Id, "Classical Bot", depth: null));
+        Assert.Contains("requires a depth setting", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(10)]
+    [InlineData(-1)]
+    public async Task CreateBotAsync_WhenDepthIsOutOfRange_ThrowsArgumentOutOfRangeException(int invalidDepth)
+    {
+        await using var dbContext = CreateDbContext();
+        var capability = new EngineCapabilityModel
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Classical",
+            MaxBoardSizeX = 3,
+            MaxBoardSizeY = 3,
+            Depth = true,
+        };
+        dbContext.EngineCapabilities.Add(capability);
+        await dbContext.SaveChangesAsync();
+
+        var service = new BotService(dbContext);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.CreateBotAsync(capability.Id, "Classical Bot", depth: invalidDepth));
+    }
+
     private static GameDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<GameDbContext>()

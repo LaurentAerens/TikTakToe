@@ -32,9 +32,22 @@ public sealed class BotService : IBotService
             throw new KeyNotFoundException($"Engine capability with ID '{engineCapabilityId}' not found.");
         }
 
-        if (depth.HasValue && depth.Value <= 0)
+        if (!capability.Depth && depth.HasValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(depth), "Depth must be greater than zero.");
+            throw new ArgumentException($"Engine '{capability.DisplayName}' does not support a depth setting.", nameof(depth));
+        }
+
+        if (capability.Depth)
+        {
+            if (!depth.HasValue)
+            {
+                throw new ArgumentException($"Engine '{capability.DisplayName}' requires a depth setting.", nameof(depth));
+            }
+
+            if (depth.Value < 1 || depth.Value > 9)
+            {
+                throw new ArgumentOutOfRangeException(nameof(depth), "Depth must be between 1 and 9 for this engine.");
+            }
         }
 
         var playerId = Guid.NewGuid();
