@@ -32,6 +32,17 @@ docker compose --profile prd up --build
 
 See the [root README](../../README.md) for full Docker usage instructions.
 
+---
+
+## Dev Containers (VS Code)
+
+Instead of running Docker Compose manually and editing on the host, you can develop directly inside the `frontend-dev` container — TypeScript/ESLint IntelliSense then runs against the container's own installed dependencies, with no local Node/Yarn install needed.
+
+1. Install the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VS Code extension.
+2. From the repo root: Command Palette → **Dev Containers: Reopen in Container** (pick "TikTakToe Frontend"). Or open this `frontend` folder directly and use **Dev Containers: Open Folder in Container...**.
+3. This starts `frontend-dev` plus `backend-dev`, `postgres`, and `db-explorer` in the background, forwarding port 3000 (frontend) and 8080 (backend API).
+
+Config lives in [.devcontainer/](.devcontainer/) — it reuses the same [Dockerfile](Dockerfile) (`dev` target) and the root [docker-compose.yml](../../docker-compose.yml) rather than a separate build definition.
 
 ---
 

@@ -71,9 +71,10 @@ services:
     profiles: ["dev"]
     build:
       context: ./src/frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: dev
     ports:
-      - "${FRONTEND_DEV_PORT:-5173}:5173"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       - NODE_ENV=development
     volumes:
@@ -96,6 +97,7 @@ services:
     build:
       context: ./src/frontend
       dockerfile: Dockerfile
+      target: prd
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     environment:

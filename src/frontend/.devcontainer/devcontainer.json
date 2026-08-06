@@ -10,9 +10,9 @@
   "overrideCommand": false,
   "shutdownAction": "stopCompose",
   "remoteUser": "node",
-  "forwardPorts": [5173, 8080],
+  "forwardPorts": [3000, 8080],
   "portsAttributes": {
-    "5173": { "label": "Frontend (Vite)", "onAutoForward": "openBrowser" },
+    "3000": { "label": "Frontend (Vite)", "onAutoForward": "openBrowser" },
     "8080": { "label": "Backend API" }
   },
   "customizations": {

@@ -77,8 +77,7 @@ The `docker-compose.yml` file accepts the following shell variables to override 
 | `POSTGRES_PASSWORD`   | `changeme-dev-only` | PostgreSQL superuser password. **Always override this in real deployments.** |
 | `POSTGRES_PORT`       | `5432`       | Host port mapped to the PostgreSQL container. |
 | `BACKEND_PORT`        | `8080`       | Host port mapped to the backend container.    |
-| `FRONTEND_PORT`       | `3000`       | Host port mapped to the production frontend.  |
-| `FRONTEND_DEV_PORT`   | `5173`       | Host port mapped to the Vite dev server.      |
+| `FRONTEND_PORT`       | `3000`       | Host port mapped to the frontend (shared by the production nginx container and the dev Vite server). |
 | `DB_EXPLORER_PORT`    | `8081`       | Host port mapped to the pgweb UI.             |
 
 Example — start the dev stack on non-default ports:
@@ -86,6 +85,6 @@ Example — start the dev stack on non-default ports:
 ```bash
 export POSTGRES_PASSWORD=mysecret
 export BACKEND_PORT=9090
-export FRONTEND_DEV_PORT=4000
+export FRONTEND_PORT=4000
 docker compose --profile dev up --build
 ```
