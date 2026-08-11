@@ -186,6 +186,222 @@ public sealed class EngineLookupProviderTests
         Assert.Contains("already exists", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task EnsureCapabilitiesAsync_IsIdempotent()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+
+        await provider.EnsureCapabilitiesAsync();
+        await provider.EnsureCapabilitiesAsync();
+
+        var capabilities = await provider.ListCapabilitiesAsync();
+        var enginePlayers = await dbContext.Players.Where(x => x.IsEngine).ToListAsync();
+
+        Assert.Equal(11, capabilities.Count);
+        Assert.Equal(11, enginePlayers.Count);
+        Assert.Equal(11, await dbContext.EngineCapabilities.CountAsync());
+    }
+
+    [Fact]
+    public async Task EnsureCapabilitiesAsync_UpdatesStaleCapabilityMetadata()
+    {
+        await using var dbContext = CreateDbContext();
+        dbContext.EngineCapabilities.Add(new EngineCapabilityModel
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Classical",
+            MaxBoardSizeX = 1,
+            MaxBoardSizeY = 1,
+            Depth = false,
+        });
+        await dbContext.SaveChangesAsync();
+
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var classical = await provider.GetByDisplayNameAsync("Classical");
+        Assert.NotNull(classical);
+        Assert.Equal(3, classical!.MaxBoardSizeX);
+        Assert.Equal(3, classical.MaxBoardSizeY);
+        Assert.True(classical.Depth);
+        Assert.Equal(11, await dbContext.EngineCapabilities.CountAsync());
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithUnknownId_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var result = await provider.GetByIdAsync(Guid.NewGuid());
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetByDisplayNameAsync_WithUnknownName_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var result = await provider.GetByDisplayNameAsync("Not An Engine");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetByPlayerIdAsync_WithUnknownPlayer_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var result = await provider.GetByPlayerIdAsync(Guid.NewGuid());
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetByPlayerIdAsync_WithHumanPlayer_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var humanPlayerId = Guid.NewGuid();
+        dbContext.Players.Add(new PlayerModel
+        {
+            Id = humanPlayerId,
+            IsEngine = false,
+            ExternalId = null,
+        });
+        await dbContext.SaveChangesAsync();
+
+        var provider = new EngineLookupProvider(dbContext);
+        var result = await provider.GetByPlayerIdAsync(humanPlayerId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetByPlayerIdAsync_WithEnginePlayerForMissingCapability_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var playerId = Guid.NewGuid();
+        dbContext.Players.Add(new PlayerModel
+        {
+            Id = playerId,
+            IsEngine = true,
+            ExternalId = Guid.NewGuid().ToString("D"),
+        });
+        await dbContext.SaveChangesAsync();
+
+        var provider = new EngineLookupProvider(dbContext);
+        var result = await provider.GetByPlayerIdAsync(playerId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CreateEngineByPlayerIdAsync_WithUnknownPlayer_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var engine = await provider.CreateEngineByPlayerIdAsync(Guid.NewGuid());
+
+        Assert.Null(engine);
+    }
+
+    [Fact]
+    public async Task CreateEngineFromCapability_WithNullCapability_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+
+        var engine = provider.CreateEngineFromCapability(null!);
+
+        Assert.Null(engine);
+    }
+
+    [Fact]
+    public async Task CreateEngineFromCapability_WithUnregisteredDisplayName_ReturnsNull()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+
+        var engine = provider.CreateEngineFromCapability(new EngineCapabilityWithPlayerModel
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = Guid.NewGuid(),
+            DisplayName = "Not A Registered Engine",
+            MaxBoardSizeX = 3,
+            MaxBoardSizeY = 3,
+            Depth = true,
+        });
+
+        Assert.Null(engine);
+    }
+
+    [Fact]
+    public async Task GetSupportedPlayersByIdAsync_KnownAndUnknownIds_ReturnDefaultTwoPlayers()
+    {
+        await using var dbContext = CreateDbContext();
+        var provider = new EngineLookupProvider(dbContext);
+        await provider.EnsureCapabilitiesAsync();
+
+        var classical = await provider.GetByDisplayNameAsync("Classical");
+        Assert.NotNull(classical);
+
+        var known = await provider.GetSupportedPlayersByIdAsync(classical!.Id);
+        var unknown = await provider.GetSupportedPlayersByIdAsync(Guid.NewGuid());
+
+        Assert.Equal([1, 2], known);
+        Assert.Equal([1, 2], unknown);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenCapabilityHasNoMappedPlayer_Throws()
+    {
+        await using var dbContext = CreateDbContext();
+        var capabilityId = Guid.NewGuid();
+        dbContext.EngineCapabilities.Add(new EngineCapabilityModel
+        {
+            Id = capabilityId,
+            DisplayName = "Orphan Engine",
+            MaxBoardSizeX = 3,
+            MaxBoardSizeY = 3,
+            Depth = true,
+        });
+        await dbContext.SaveChangesAsync();
+
+        var provider = new EngineLookupProvider(dbContext);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => provider.GetByIdAsync(capabilityId));
+        Assert.Contains("has no mapped engine player", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ListCapabilitiesAsync_WhenCapabilityHasNoMappedPlayer_Throws()
+    {
+        await using var dbContext = CreateDbContext();
+        dbContext.EngineCapabilities.Add(new EngineCapabilityModel
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Orphan Engine",
+            MaxBoardSizeX = 3,
+            MaxBoardSizeY = 3,
+            Depth = true,
+        });
+        await dbContext.SaveChangesAsync();
+
+        var provider = new EngineLookupProvider(dbContext);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => provider.ListCapabilitiesAsync());
+        Assert.Contains("has no mapped engine player", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static GameDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<GameDbContext>()
