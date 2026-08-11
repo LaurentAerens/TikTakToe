@@ -7,4 +7,21 @@ internal sealed record EngineRegistration(
     int MaxBoardSizeX,
     int MaxBoardSizeY,
     bool Depth,
-    Func<IEngine> Factory);
+    Func<IEngine> Factory,
+    IReadOnlyList<int>? CustomDepths = null)
+{
+    public IReadOnlyList<int?> GetSupportedDepths()
+    {
+        if (this.CustomDepths is { Count: > 0 })
+        {
+            return this.CustomDepths.Select(d => (int?)d).ToArray();
+        }
+
+        if (this.Depth)
+        {
+            return [1, 2, 3];
+        }
+
+        return [null];
+    }
+}

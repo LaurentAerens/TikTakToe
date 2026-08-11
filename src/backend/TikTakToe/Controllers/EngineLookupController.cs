@@ -16,6 +16,10 @@ public static class EngineLookupController
             foreach (var capability in capabilities)
             {
                 var supportedPlayers = await provider.GetSupportedPlayersByIdAsync(capability.Id, cancellationToken);
+                var playerOptions = capability.PlayerOptions
+                    .Select(o => new EnginePlayerOptionDto(o.PlayerId, o.Depth))
+                    .ToArray();
+
                 result.Add(new EngineCapabilityDto(
                     capability.Id,
                     capability.PlayerId,
@@ -23,7 +27,8 @@ public static class EngineLookupController
                     capability.MaxBoardSizeX,
                     capability.MaxBoardSizeY,
                     capability.Depth,
-                    supportedPlayers.Order().ToArray()));
+                    supportedPlayers.Order().ToArray(),
+                    playerOptions));
             }
 
             return Results.Ok(ApiResponse<EngineCapabilityDto[]>.Ok(result.ToArray()));
@@ -74,7 +79,17 @@ public static class EngineLookupController
         .WithSummary("Resolve the AI engine ID for a player");
     }
 
-    private sealed record EngineCapabilityDto(Guid Id, Guid PlayerId, string DisplayName, int MaxBoardSizeX, int MaxBoardSizeY, bool Depth, int[] SupportedPlayers);
+    private sealed record EnginePlayerOptionDto(Guid PlayerId, int? Depth);
+
+    private sealed record EngineCapabilityDto(
+        Guid Id,
+        Guid PlayerId,
+        string DisplayName,
+        int MaxBoardSizeX,
+        int MaxBoardSizeY,
+        bool Depth,
+        int[] SupportedPlayers,
+        EnginePlayerOptionDto[] PlayerOptions);
 
     private sealed record EngineIdLookupDto(Guid Id, Guid PlayerId, string DisplayName);
 }

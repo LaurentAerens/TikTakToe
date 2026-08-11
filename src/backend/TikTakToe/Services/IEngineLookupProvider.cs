@@ -25,5 +25,7 @@ public interface IEngineLookupProvider
 
     Task<IEngine?> CreateEngineByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default);
 
+    Task<EnginePlayerResolution?> ResolveEnginePlayerAsync(Guid playerId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<int>> GetSupportedPlayersByIdAsync(Guid id, CancellationToken cancellationToken = default);
 }

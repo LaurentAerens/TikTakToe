@@ -86,7 +86,8 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
             await this._dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        await this.EnsureEnginePlayersAsync(cancellationToken);
+        var botService = new BotService(this._dbContext);
+        await botService.EnsureDefaultBotsAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<EngineCapabilityWithPlayerModel>> ListCapabilitiesAsync(CancellationToken cancellationToken = default)
@@ -96,9 +97,9 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
             .OrderBy(x => x.DisplayName)
             .ToListAsync(cancellationToken);
 
-        var playersByExternalId = await this.GetEnginePlayersByExternalIdAsync(cancellationToken);
+        var botsByEngineId = await this.GetBotsGroupedByEngineIdAsync(cancellationToken);
         return capabilities
-            .Select(capability => ToCapabilityWithPlayer(capability, playersByExternalId))
+            .Select(capability => ToCapabilityWithPlayer(capability, botsByEngineId))
             .ToArray();
     }
 
@@ -113,35 +114,60 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
             return null;
         }
 
-        var playersByExternalId = await this.GetEnginePlayersByExternalIdAsync(cancellationToken);
-        return ToCapabilityWithPlayer(capability, playersByExternalId);
+        var botsByEngineId = await this.GetBotsGroupedByEngineIdAsync(cancellationToken);
+        return ToCapabilityWithPlayer(capability, botsByEngineId);
     }
 
     public async Task<EngineCapabilityWithPlayerModel?> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
     {
+        var bot = await this._dbContext.Bots
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == playerId, cancellationToken);
+
+        if (bot is not null)
+        {
+            var byEngineId = await this.GetByIdAsync(bot.EngineCapabilityId, cancellationToken);
+            if (byEngineId is null)
+            {
+                return null;
+            }
+
+            return new EngineCapabilityWithPlayerModel
+            {
+                Id = byEngineId.Id,
+                PlayerId = bot.Id,
+                PlayerOptions = byEngineId.PlayerOptions,
+                DisplayName = byEngineId.DisplayName,
+                MaxBoardSizeX = byEngineId.MaxBoardSizeX,
+                MaxBoardSizeY = byEngineId.MaxBoardSizeY,
+                Depth = byEngineId.Depth,
+            };
+        }
+
         var player = await this._dbContext.Players
             .AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == playerId && x.IsEngine, cancellationToken);
 
-        if (player is null || !TryParseEngineExternalId(player.ExternalId, out var engineId))
+        if (player is null || !TryParseEngineExternalId(player.ExternalId, out var engineId, out _))
         {
             return null;
         }
 
-        var byEngineId = await this.GetByIdAsync(engineId, cancellationToken);
-        if (byEngineId is null)
+        var fallbackByEngineId = await this.GetByIdAsync(engineId, cancellationToken);
+        if (fallbackByEngineId is null)
         {
             return null;
         }
 
         return new EngineCapabilityWithPlayerModel
         {
-            Id = byEngineId.Id,
+            Id = fallbackByEngineId.Id,
             PlayerId = player.Id,
-            DisplayName = byEngineId.DisplayName,
-            MaxBoardSizeX = byEngineId.MaxBoardSizeX,
-            MaxBoardSizeY = byEngineId.MaxBoardSizeY,
-            Depth = byEngineId.Depth,
+            PlayerOptions = fallbackByEngineId.PlayerOptions,
+            DisplayName = fallbackByEngineId.DisplayName,
+            MaxBoardSizeX = fallbackByEngineId.MaxBoardSizeX,
+            MaxBoardSizeY = fallbackByEngineId.MaxBoardSizeY,
+            Depth = fallbackByEngineId.Depth,
         };
     }
 
@@ -157,8 +183,8 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
             return null;
         }
 
-        var playersByExternalId = await this.GetEnginePlayersByExternalIdAsync(cancellationToken);
-        return ToCapabilityWithPlayer(capability, playersByExternalId);
+        var botsByEngineId = await this.GetBotsGroupedByEngineIdAsync(cancellationToken);
+        return ToCapabilityWithPlayer(capability, botsByEngineId);
     }
 
     public async Task<IEngine?> CreateEngineByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -188,13 +214,41 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
     public async Task<IEngine?> CreateEngineByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default)
     {
-        var capability = await this.GetByPlayerIdAsync(playerId, cancellationToken);
-        if (capability is null)
+        var resolution = await this.ResolveEnginePlayerAsync(playerId, cancellationToken);
+        return resolution?.Engine;
+    }
+
+    public async Task<EnginePlayerResolution?> ResolveEnginePlayerAsync(Guid playerId, CancellationToken cancellationToken = default)
+    {
+        var bot = await this._dbContext.Bots
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == playerId, cancellationToken);
+
+        if (bot is not null)
+        {
+            var engine = await this.CreateEngineByIdAsync(bot.EngineCapabilityId, cancellationToken);
+            if (engine is not null)
+            {
+                return new EnginePlayerResolution(engine, bot.Depth);
+            }
+        }
+
+        var player = await this._dbContext.Players
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == playerId && x.IsEngine, cancellationToken);
+
+        if (player is null || !TryParseEngineExternalId(player.ExternalId, out var engineId, out var depth))
         {
             return null;
         }
 
-        return await this.CreateEngineByIdAsync(capability.Id, cancellationToken);
+        var fallbackEngine = await this.CreateEngineByIdAsync(engineId, cancellationToken);
+        if (fallbackEngine is null)
+        {
+            return null;
+        }
+
+        return new EnginePlayerResolution(fallbackEngine, depth);
     }
 
     public async Task<IReadOnlyCollection<int>> GetSupportedPlayersByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -225,18 +279,29 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
 
     private static EngineCapabilityWithPlayerModel ToCapabilityWithPlayer(
         EngineCapabilityModel capability,
-        IReadOnlyDictionary<string, PlayerModel> playersByExternalId)
+        IReadOnlyDictionary<Guid, List<BotModel>> botsByEngineId)
     {
-        var key = capability.Id.ToString();
-        if (!playersByExternalId.TryGetValue(key, out var player))
+        var playerOptions = new List<EnginePlayerOptionModel>();
+        var primaryPlayerId = Guid.Empty;
+
+        if (botsByEngineId.TryGetValue(capability.Id, out var bots))
         {
-            throw new InvalidOperationException($"Engine capability '{capability.DisplayName}' has no mapped engine player.");
+            foreach (var bot in bots)
+            {
+                playerOptions.Add(new EnginePlayerOptionModel(bot.Id, bot.Depth));
+            }
+
+            if (playerOptions.Count > 0)
+            {
+                primaryPlayerId = playerOptions[0].PlayerId;
+            }
         }
 
         return new EngineCapabilityWithPlayerModel
         {
             Id = capability.Id,
-            PlayerId = player.Id,
+            PlayerId = primaryPlayerId,
+            PlayerOptions = playerOptions,
             DisplayName = capability.DisplayName,
             MaxBoardSizeX = capability.MaxBoardSizeX,
             MaxBoardSizeY = capability.MaxBoardSizeY,
@@ -244,87 +309,52 @@ public sealed class EngineLookupProvider : IEngineLookupProvider
         };
     }
 
-    private static bool TryParseEngineExternalId(string? externalId, out Guid engineId)
+    private static bool TryParseEngineExternalId(string? externalId, out Guid engineId, out int? depth)
     {
-        return Guid.TryParse(externalId, out engineId);
+        engineId = default;
+        depth = null;
+
+        if (string.IsNullOrWhiteSpace(externalId))
+        {
+            return false;
+        }
+
+        var parts = externalId.Split(':', 2);
+        if (!Guid.TryParse(parts[0], out engineId))
+        {
+            return false;
+        }
+
+        if (parts.Length > 1 && parts[1].StartsWith("depth=", StringComparison.OrdinalIgnoreCase))
+        {
+            var depthStr = parts[1]["depth=".Length..];
+            if (int.TryParse(depthStr, out var parsedDepth))
+            {
+                depth = parsedDepth;
+            }
+        }
+
+        return true;
     }
 
-    private async Task EnsureEnginePlayersAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<Guid, List<BotModel>>> GetBotsGroupedByEngineIdAsync(CancellationToken cancellationToken)
     {
-        var capabilities = await this._dbContext.EngineCapabilities
+        var bots = await this._dbContext.Bots
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var existingEnginePlayers = await this._dbContext.Players
-            .Where(x => x.IsEngine)
-            .ToListAsync(cancellationToken);
-
-        var hasChanges = false;
-        var playersByEngineId = new Dictionary<Guid, PlayerModel>();
-        foreach (var player in existingEnginePlayers)
+        var result = new Dictionary<Guid, List<BotModel>>();
+        foreach (var bot in bots)
         {
-            if (!TryParseEngineExternalId(player.ExternalId, out var parsedEngineId))
+            if (!result.TryGetValue(bot.EngineCapabilityId, out var list))
             {
-                continue;
+                list = [];
+                result[bot.EngineCapabilityId] = list;
             }
 
-            if (!playersByEngineId.TryAdd(parsedEngineId, player))
-            {
-                throw new InvalidOperationException($"Multiple engine players map to engine id '{parsedEngineId:D}'.");
-            }
-
-            var normalizedExternalId = parsedEngineId.ToString();
-            if (!string.Equals(player.ExternalId, normalizedExternalId, StringComparison.Ordinal))
-            {
-                player.ExternalId = normalizedExternalId;
-                hasChanges = true;
-            }
+            list.Add(bot);
         }
 
-        foreach (var capability in capabilities)
-        {
-            if (playersByEngineId.ContainsKey(capability.Id))
-            {
-                continue;
-            }
-
-            this._dbContext.Players.Add(new PlayerModel
-            {
-                Id = Guid.NewGuid(),
-                IsEngine = true,
-                ExternalId = capability.Id.ToString(),
-            });
-            hasChanges = true;
-        }
-
-        if (hasChanges)
-        {
-            await this._dbContext.SaveChangesAsync(cancellationToken);
-        }
-    }
-
-    private async Task<Dictionary<string, PlayerModel>> GetEnginePlayersByExternalIdAsync(CancellationToken cancellationToken)
-    {
-        var enginePlayers = await this._dbContext.Players
-            .AsNoTracking()
-            .Where(x => x.IsEngine && x.ExternalId != null)
-            .ToListAsync(cancellationToken);
-
-        var playersByExternalId = new Dictionary<string, PlayerModel>(StringComparer.OrdinalIgnoreCase);
-        foreach (var player in enginePlayers)
-        {
-            if (!TryParseEngineExternalId(player.ExternalId, out var engineId))
-            {
-                continue;
-            }
-
-            var key = engineId.ToString();
-            if (!playersByExternalId.TryAdd(key, player))
-            {
-                throw new InvalidOperationException($"Multiple engine players map to engine id '{key}'.");
-            }
-        }
-
-        return playersByExternalId;
+        return result;
     }
 }
