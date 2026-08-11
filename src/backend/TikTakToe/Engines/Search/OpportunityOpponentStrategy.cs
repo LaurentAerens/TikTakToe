@@ -14,7 +14,22 @@ public sealed class OpportunityOpponentStrategy : IOpponentStrategy
             return enginePlayer == 1 ? scores.Max() : scores.Min();
         }
 
+        var adjustedScores = scores.Select(score =>
+        {
+            if (enginePlayer == 1 && score < 0)
+            {
+                return score * 5;
+            }
+
+            if (enginePlayer == 2 && score > 0)
+            {
+                return score * 5;
+            }
+
+            return score;
+        }).ToList();
+
         // Opponent's turn: take the average, assuming they won't necessarily play optimally.
-        return (int)Math.Round(scores.Average(s => (double)s));
+        return (int)Math.Round(adjustedScores.Average(s => (double)s));
     }
 }

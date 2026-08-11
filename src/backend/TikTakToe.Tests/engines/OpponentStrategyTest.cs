@@ -16,14 +16,14 @@ public class OpponentStrategyTest
     }
 
     [Fact]
-    public void AggregateScores_OpportunityOpponentTurn_Player1Engine_ReturnsAverageChild()
+    public void AggregateScores_OpportunityOpponentTurn_Player1Engine_ReturnsDefensiveAverageChild()
     {
         var strategy = new OpportunityOpponentStrategy();
         var scores = new[] { 1000, 0, -1000 };
 
         var aggregate = strategy.AggregateScores(scores, currentPlayer: 2, enginePlayer: 1);
 
-        Assert.Equal(0, aggregate);
+        Assert.Equal(-1333, aggregate);
     }
 
     [Fact]
@@ -35,6 +35,17 @@ public class OpponentStrategyTest
         var aggregate = strategy.AggregateScores(scores, currentPlayer: 2, enginePlayer: 2);
 
         Assert.Equal(-1000, aggregate);
+    }
+
+    [Fact]
+    public void AggregateScores_OpportunityOpponentTurn_Player1Engine_ScalesOpponentFavoredScores()
+    {
+        var strategy = new OpportunityOpponentStrategy();
+        var scores = new[] { -500 };
+
+        var aggregate = strategy.AggregateScores(scores, currentPlayer: 2, enginePlayer: 1);
+
+        Assert.Equal(-2500, aggregate);
     }
 
     [Fact]
@@ -69,5 +80,19 @@ public class OpponentStrategyTest
 
         Assert.Equal(1000, aggregate);
         Assert.Equal(425, strategy.AggregateScores(new[] { 500, 100 }, currentPlayer: 1, enginePlayer: 1));
+    }
+
+    [Fact]
+    public void AggregateScores_DepthDiscountOpponentStrategy_ScalesOpponentFavoredScores()
+    {
+        var strategy = new DepthDiscountOpponentStrategy();
+
+        var scoresP1 = new[] { -500 };
+        var aggregateP1 = strategy.AggregateScores(scoresP1, currentPlayer: 1, enginePlayer: 1);
+        Assert.Equal(-2500, aggregateP1);
+
+        var scoresP2 = new[] { 500 };
+        var aggregateP2 = strategy.AggregateScores(scoresP2, currentPlayer: 2, enginePlayer: 2);
+        Assert.Equal(2500, aggregateP2);
     }
 }
