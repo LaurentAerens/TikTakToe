@@ -24,7 +24,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
 # Required by Npgsql native auth probing on Alpine.
-RUN apk add --no-cache krb5-libs=1.22.1-r0
+RUN apk add --no-cache krb5-libs=1.22.2-r1
 
 # Create non-root user
 RUN addgroup --system --gid 1001 appgroup \
