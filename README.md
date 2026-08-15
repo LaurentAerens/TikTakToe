@@ -116,7 +116,7 @@ FEATURES__RESETDATABASEONSTARTUP=false docker compose --profile dev up --build -
 ```
 
 **Available at:**
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:3000
 - Backend API: http://localhost:8080
 - Database Explorer: http://localhost:8081
 
@@ -149,6 +149,16 @@ docker compose --profile prd up --build --force-recreate
 **Available at:**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8080
+
+### With VS Code Dev Containers
+
+For frontend development with full TypeScript/ESLint IntelliSense running inside the same container the dev profile above uses — no local Node/Yarn install required:
+
+1. Install the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VS Code extension.
+2. Command Palette → **Dev Containers: Reopen in Container** (pick "TikTakToe Frontend" if prompted), or **Dev Containers: Open Folder in Container...** and select `src/frontend` directly.
+3. This builds the `frontend-dev` service's `dev` target and also starts `backend-dev`, `postgres`, and `db-explorer` in the background, so the frontend has a working API immediately.
+
+The container workspace is scoped to `/app` (the frontend only). See [src/frontend/.devcontainer/](src/frontend/.devcontainer/) for the configuration, and [src/frontend/README.md](src/frontend/README.md) for frontend-specific details.
 
 ### Without Docker
 

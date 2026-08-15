@@ -1,0 +1,26 @@
+{
+  "name": "TikTakToe Frontend",
+  "dockerComposeFile": [
+    "../../../docker-compose.yml",
+    "docker-compose.extend.yml"
+  ],
+  "service": "frontend-dev",
+  "runServices": ["postgres", "backend-dev", "db-explorer"],
+  "workspaceFolder": "/app",
+  "overrideCommand": false,
+  "shutdownAction": "stopCompose",
+  "remoteUser": "node",
+  "forwardPorts": [3000, 8080],
+  "portsAttributes": {
+    "3000": { "label": "Frontend (Vite)", "onAutoForward": "openBrowser" },
+    "8080": { "label": "Backend API" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"],
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  }
+}
