@@ -18,17 +18,14 @@ import {
   People24Regular,
 } from "@fluentui/react-icons";
 import EngineSelector from "@/components/EngineSelector";
-
-interface Engine {
-  id: string;
-  name: string;
-  description?: string;
-}
+import type { EngineOption } from "@/types/engine";
 
 interface RightPanelProps {
-  engines: Engine[];
+  engines: EngineOption[];
   playEngine: string;
   onPlayEngineChange: (value: string) => void;
+  /** Player GUID registered for the current game; absent until one is started. */
+  playerId?: string;
 }
 
 interface Challenge {
@@ -45,16 +42,18 @@ const MOCK_CHALLENGES: Challenge[] = [
   { id: "c3", opponentId: "xo_pro", status: "declined", direction: "sent", timestamp: new Date(Date.now() - 600000) },
 ];
 
-const MY_ID = "you_" + Math.random().toString(36).slice(2, 7);
-
-const RightPanel = ({ engines, playEngine, onPlayEngineChange }: RightPanelProps) => {
+const RightPanel = ({ engines, playEngine, onPlayEngineChange, playerId }: RightPanelProps) => {
   const [tab, setTab] = useState<string>("engine");
   const [opponentId, setOpponentId] = useState("");
   const [challenges, setChallenges] = useState<Challenge[]>(MOCK_CHALLENGES);
   const [copied, setCopied] = useState(false);
 
+  // A fresh player is registered per game, so this is empty until one is started.
+  const myId = playerId ?? "no active game";
+
   const handleCopyId = () => {
-    navigator.clipboard.writeText(MY_ID);
+    if (playerId === undefined) return;
+    navigator.clipboard.writeText(playerId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -121,12 +120,13 @@ const RightPanel = ({ engines, playEngine, onPlayEngineChange }: RightPanelProps
                     userSelect: "all",
                   }}
                 >
-                  {MY_ID}
+                  {myId}
                 </code>
                 <Button
                   appearance="outline"
                   size="small"
                   onClick={handleCopyId}
+                  disabled={playerId === undefined}
                   icon={copied ? <Checkmark24Regular /> : <Copy24Regular />}
                 />
               </div>

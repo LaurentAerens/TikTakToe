@@ -10,52 +10,40 @@ import {
 } from "@fluentui/react-components";
 import { MoreVertical20Regular, Info20Regular } from "@fluentui/react-icons";
 import EngineSelector from "@/components/EngineSelector";
-
-interface Engine {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-const ENGINE_EVAL_INFO: Record<string, { scale: string; description: string }> = {
-  minimax: {
-    scale: "-1 to +1",
-    description:
-      "Returns exact game-theoretic value. +1 = X wins, -1 = O wins, 0 = draw.",
-  },
-  "alpha-beta": {
-    scale: "-1 to +1",
-    description: "Same as Minimax but computed faster via pruning.",
-  },
-  mcts: {
-    scale: "-1 to +1",
-    description:
-      "Based on win rate from random simulations. Closer to 0 = uncertain.",
-  },
-  neural: {
-    scale: "-1 to +1",
-    description:
-      "Neural network confidence score. Learned positional understanding.",
-  },
-};
+import type { EngineOption } from "@/types/engine";
 
 interface EvalBarProps {
+  /** Normalised to -1..+1 from the backend's -1000..1000 score. */
   evaluation: number;
   engineName?: string;
-  engines?: Engine[];
+  engines?: EngineOption[];
   evalEngine?: string;
   onEvalEngineChange?: (value: string) => void;
+  /** Set when the eval request failed or no game is running; renders a neutral bar. */
+  unavailable?: boolean;
 }
 
-const EvalBar = ({ evaluation, engineName, engines, evalEngine, onEvalEngineChange }: EvalBarProps) => {
-  const percentage = Math.max(0, Math.min(100, (evaluation + 1) * 50));
-  const evalDisplay = evaluation > 0 ? `+${evaluation.toFixed(2)}` : evaluation.toFixed(2);
-  const evalInfo = evalEngine ? ENGINE_EVAL_INFO[evalEngine] : null;
+const EvalBar = ({
+  evaluation,
+  engineName,
+  engines,
+  evalEngine,
+  onEvalEngineChange,
+  unavailable,
+}: EvalBarProps) => {
+  const value = unavailable ? 0 : evaluation;
+  const percentage = Math.max(0, Math.min(100, (value + 1) * 50));
+  const evalDisplay = unavailable ? "--" : value > 0 ? `+${value.toFixed(2)}` : value.toFixed(2);
+  const selectedEngine = engines?.find((engine) => engine.id === evalEngine);
 
   const xColor = tokens.colorPaletteBlueForeground2;
   const oColor = tokens.colorPaletteBerryForeground1;
   const valueColor =
-    evaluation > 0.05 ? xColor : evaluation < -0.05 ? oColor : tokens.colorNeutralForeground3;
+    unavailable || Math.abs(value) <= 0.05
+      ? tokens.colorNeutralForeground3
+      : value > 0
+      ? xColor
+      : oColor;
 
   return (
     <Card style={{ padding: 8, height: "100%" }}>
@@ -126,16 +114,18 @@ const EvalBar = ({ evaluation, engineName, engines, evalEngine, onEvalEngineChan
           {evalDisplay}
         </Text>
 
-        {evalInfo && (
+        {selectedEngine && (
           <Tooltip
             relationship="description"
             withArrow
             content={
               <div style={{ maxWidth: 220 }}>
-                <Text weight="semibold" size={200}>Scale: {evalInfo.scale}</Text>
+                <Text weight="semibold" size={200}>Scale: -1 to +1</Text>
                 <div>
                   <Text size={100} style={{ color: tokens.colorNeutralForeground2 }}>
-                    {evalInfo.description}
+                    {selectedEngine.name} scores the position from X's perspective
+                    (+1 = X winning, -1 = O winning, 0 = level)
+                    {selectedEngine.description ? ` - ${selectedEngine.description}.` : "."}
                   </Text>
                 </div>
               </div>

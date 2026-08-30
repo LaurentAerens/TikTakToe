@@ -50,6 +50,47 @@ Returns the running application version.
 
 ---
 
+## Players
+
+### `POST /players`
+
+Registers a player identity. A human player must be registered before it can join a game,
+and the returned UUID is what the client sends as `X-Player-Id` on every move.
+
+> Engine players are provisioned automatically at startup — do not register them here.
+> Posting `isEngine: true` without a valid engine UUID in `externalId` raises an unhandled
+> error and returns `500`.
+
+**Request body**
+
+| Field        | Type      | Default | Description                                             |
+| ------------ | --------- | ------- | ------------------------------------------------------- |
+| `isEngine`   | `boolean` | —       | Must be `false` for human players.                      |
+| `externalId` | `string?` | `null`  | Engine UUID; only meaningful when `isEngine` is `true`. |
+
+```json
+{
+  "isEngine": false,
+  "externalId": null
+}
+```
+
+**Response `201 Created`**
+
+`Location: /players/{id}`. The `data` field is the new player's UUID.
+
+```json
+{
+  "success": true,
+  "data": "11111111-1111-1111-1111-111111111111",
+  "error": null
+}
+```
+
+> There is no `GET /players/{id}` despite the `Location` header.
+
+---
+
 ## Games
 
 ### `POST /games`
@@ -224,7 +265,11 @@ When the next player (`waitingForPlayerId`) is an engine, the server automatical
 
 ### `GET /engines`
 
-Lists all available engine capabilities.
+Lists all available engine capabilities, ordered by `displayName`.
+
+> Engine `id` and `playerId` values are regenerated whenever the database is reset
+> (the dev profile defaults `FEATURES__RESETDATABASEONSTARTUP` to `true`), so clients
+> must resolve them at runtime rather than hardcoding them.
 
 **Response `200 OK`**
 
@@ -236,9 +281,10 @@ Lists all available engine capabilities.
       "id":           "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
       "playerId":     "cccccccc-cccc-cccc-cccc-cccccccccccc",
       "displayName":  "Classical",
-      "maxBoardSizeX": 10,
-      "maxBoardSizeY": 10,
-      "depth": true
+      "maxBoardSizeX": 3,
+      "maxBoardSizeY": 3,
+      "depth": true,
+      "supportedPlayers": [1, 2]
     }
   ],
   "error": null
@@ -255,6 +301,7 @@ Lists all available engine capabilities.
 | `maxBoardSizeX` | `integer` | Maximum supported board width.                              |
 | `maxBoardSizeY` | `integer` | Maximum supported board height.                             |
 | `depth`         | `boolean` | Whether the engine accepts a custom `depth` parameter.      |
+| `supportedPlayers` | `int[]` | Board marker values the engine can play as (currently always `[1, 2]`). |
 
 ---
 
@@ -329,6 +376,54 @@ This is useful when you have the `playerId` from a game's player list and want t
 | Status | Condition                       |
 | ------ | ------------------------------- |
 | `404`  | Engine player ID not found.     |
+
+---
+
+## Evaluation
+
+### `POST /eval`
+
+Scores a board position using one of the available engines.
+
+**Request body**
+
+| Field      | Type       | Default | Description                                                            |
+| ---------- | ---------- | ------- | ---------------------------------------------------------------------- |
+| `engineId` | `Guid`     | —       | Engine **capability** id (the `id` from `GET /engines`, not `playerId`). |
+| `board`    | `int[][]`  | —       | Board to evaluate. Rows must all be the same length.                    |
+| `player`   | `integer`  | —       | Perspective to score from; must be one of the engine's `supportedPlayers`. |
+| `depth`    | `integer?` | `null`  | Optional search depth. `0` behaves the same as omitting it.             |
+
+```json
+{
+  "engineId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "board": [[1,2,0],[0,1,0],[0,0,2]],
+  "player": 1
+}
+```
+
+**Response `200 OK`**
+
+`score` runs from `-1000` to `1000`, measured from player 1's perspective:
+`+1000` = player 1 wins, `-1000` = player 2 wins, `0` = level or drawn.
+
+```json
+{
+  "success": true,
+  "data": { "score": 1000 },
+  "error": null
+}
+```
+
+**Error responses**
+
+| Status | Condition                                                                                         |
+| ------ | ------------------------------------------------------------------------------------------------- |
+| `400`  | Missing/ragged board, unsupported player value, board exceeding the engine's limits, negative depth, or a depth passed to an engine whose `depth` capability is `false`. |
+| `404`  | Engine id not found.                                                                              |
+
+> Every engine except `Random` supports 3×3 boards only. `Random` accepts any size but
+> rejects any non-null `depth`.
 
 ---
 

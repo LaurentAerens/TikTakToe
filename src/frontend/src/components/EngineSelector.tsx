@@ -1,14 +1,9 @@
 import { Dropdown, Option, Field, tokens } from "@fluentui/react-components";
-
-interface Engine {
-  id: string;
-  name: string;
-  description?: string;
-}
+import type { EngineOption } from "@/types/engine";
 
 interface EngineSelectorProps {
   label: string;
-  engines: Engine[];
+  engines: EngineOption[];
   value: string;
   onChange: (value: string) => void;
 }

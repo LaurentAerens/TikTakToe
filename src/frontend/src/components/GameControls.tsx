@@ -3,15 +3,27 @@ import { Previous24Regular, ArrowClockwise24Regular, Next24Regular } from "@flue
 
 interface GameControlsProps {
   onNewGame: () => void;
+  /** Steps back through the server-recorded move history; does not undo a move. */
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
-  currentTurn: "X" | "O";
+  /** Glyph of the player to move, derived from their board marker. */
+  currentTurn: string;
   status: string;
+  newGameDisabled?: boolean;
 }
 
-const GameControls = ({ onNewGame, onUndo, onRedo, canUndo, canRedo, currentTurn, status }: GameControlsProps) => {
+const GameControls = ({
+  onNewGame,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+  currentTurn,
+  status,
+  newGameDisabled,
+}: GameControlsProps) => {
   const xColor = tokens.colorPaletteBlueForeground2;
   const oColor = tokens.colorPaletteBerryForeground1;
 
@@ -56,6 +68,7 @@ const GameControls = ({ onNewGame, onUndo, onRedo, canUndo, canRedo, currentTurn
           appearance="primary"
           icon={<ArrowClockwise24Regular />}
           onClick={onNewGame}
+          disabled={newGameDisabled}
           style={{ flex: 1 }}
         />
         <Button

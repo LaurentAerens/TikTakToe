@@ -9,7 +9,12 @@ import History from "./pages/History.tsx";
 import Leaderboard from "./pages/Leaderboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    // A focus-triggered refetch would race the engine-move polling loop mid-game.
+    queries: { retry: 1, refetchOnWindowFocus: false },
+  },
+});
 
 const App = () => (
   <ThemeProvider>
