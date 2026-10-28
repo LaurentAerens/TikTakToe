@@ -32,8 +32,13 @@ public class SearchEngineBehaviorTest
         };
         yield return new object[]
         {
+            new Func<IEngine>(() => new HalfsightEngine()),
+        };
+        yield return new object[]
+        {
             new Func<IEngine>(() => new InverseEngine()),
         };
+
         yield return new object[]
         {
             new Func<IEngine>(() => new DisconnectedEngine()),
@@ -70,6 +75,10 @@ public class SearchEngineBehaviorTest
         {
             new Func<IEngine>(() => new SightlineEngine()),
         };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new HalfsightEngine()),
+        };
     }
 
     public static IEnumerable<object[]> WeakSearchEngineFactories()
@@ -93,6 +102,10 @@ public class SearchEngineBehaviorTest
         yield return new object[]
         {
             new Func<IEngine>(() => new BlindsightEngine()),
+        };
+        yield return new object[]
+        {
+            new Func<IEngine>(() => new HalfblindEngine()),
         };
     }
 
