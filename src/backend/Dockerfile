@@ -20,7 +20,7 @@ RUN dotnet publish TikTakToe/TikTakToe.csproj \
     --output /app/publish
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-alpine AS runtime
 WORKDIR /app
 
 # Required by Npgsql native auth probing on Alpine.
